@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
@@ -45,3 +47,12 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'can:admin.access'])->group(function () {
     Route::get('/admin', [HomeController::class, 'adminDashboard'])->name('admin.dashboard');
 });
+
+Route::middleware(['auth', 'can:admin.access'])->group(function () {
+    Route::resource('admin/categories', AdminCategoryController::class)
+        ->except(['show'])
+        ->names('admin.categories');
+});
+
+Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+Route::get('/categories/{category:slug}', [CategoryController::class, 'show'])->name('categories.show');
