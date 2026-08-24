@@ -19,7 +19,7 @@ class UpdateCategoryRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', 'unique:categories,slug,' . ($category?->id ?: 'NULL')],
+            'slug' => ['nullable', 'string', 'max:255', 'unique:categories,slug,'.($category?->id ?: 'NULL')],
             'description' => ['nullable', 'string'],
             'parent_id' => ['nullable', 'integer', 'exists:categories,id'],
             'image' => ['nullable', 'image', 'max:2048'],
@@ -43,13 +43,13 @@ class UpdateCategoryRequest extends FormRequest
             }
 
             if ((int) $parentId === (int) $category->id) {
-                $validator->errors()->add('parent_id', 'A category cannot be its own parent.');
+                $validator->errors()->add('parent_id', 'একটি ক্যাটাগরি নিজের অভিভাবক হতে পারে না।');
 
                 return;
             }
 
             if (in_array((int) $parentId, $category->getAllDescendantIds(), true)) {
-                $validator->errors()->add('parent_id', 'The selected parent would create a circular category hierarchy.');
+                $validator->errors()->add('parent_id', 'নির্বাচিত অভিভাবক একটি গোলাকার ক্যাটাগরি শ্রেণিবিন্যাস তৈরি করবে।');
             }
         });
     }

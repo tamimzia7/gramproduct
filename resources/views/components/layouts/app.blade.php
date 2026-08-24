@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="{{ $metaDescription ?? 'Village-origin food & agricultural products delivered from field, water and village to your home.' }}">
+    <meta name="description" content="{{ $metaDescription ?? 'গ্রাম থেকে মাঠ, জল ও প্রকৃতি থেকে আপনার ঘরে প্রামাণ্য খাদ্য ও কৃষি পণ্য।' }}">
 
     <title>{{ $title ?? config('app.name', 'Laravel') }}</title>
 

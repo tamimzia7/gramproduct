@@ -6,20 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Category\StoreCategoryRequest;
 use App\Http\Requests\Admin\Category\UpdateCategoryRequest;
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class CategoryController extends Controller
 {
-    public function __construct()
-    {
-        $this->authorizeResource(Category::class);
-    }
-
     public function index(): View
     {
+        Gate::authorize('manage-categories');
+
         $categories = Category::getFlatTree();
 
         return view('admin.categories.index', compact('categories'));
@@ -27,6 +26,8 @@ class CategoryController extends Controller
 
     public function create(): View
     {
+        Gate::authorize('manage-categories');
+
         $parentOptions = Category::getFlatTree();
 
         return view('admin.categories.create', compact('parentOptions'));
@@ -34,6 +35,8 @@ class CategoryController extends Controller
 
     public function store(StoreCategoryRequest $request): RedirectResponse
     {
+        Gate::authorize('manage-categories');
+
         $data = $request->safe()->except(['image']);
 
         if (empty($data['slug'])) {
@@ -52,6 +55,8 @@ class CategoryController extends Controller
 
     public function edit(Category $category): View
     {
+        Gate::authorize('manage-categories');
+
         $excluded = array_merge([$category->id], $category->getAllDescendantIds());
         $parentOptions = Category::getFlatTree()->reject(fn (Category $c) => in_array($c->id, $excluded, true));
 
@@ -60,6 +65,8 @@ class CategoryController extends Controller
 
     public function update(UpdateCategoryRequest $request, Category $category): RedirectResponse
     {
+        Gate::authorize('manage-categories');
+
         $data = $request->safe()->except(['image']);
 
         if (empty($data['slug'])) {
@@ -81,14 +88,16 @@ class CategoryController extends Controller
 
     public function destroy(Category $category): RedirectResponse
     {
+        Gate::authorize('manage-categories');
+
         if ($category->hasChildren()) {
             return redirect()->route('admin.categories.index')
                 ->with('error', 'উপ-ক্যাটাগরি থাকলে ক্যাটাগরি মুছে ফেলা যাবে না। প্রথমে উপ-ক্যাটাগরি সরিয়ে ফেলুন বা মুছে ফেলুন।');
         }
 
-        if (class_exists(\App\Models\Product::class) && $category->products()->exists()) {
+        if (class_exists(Product::class) && $category->products()->exists()) {
             return redirect()->route('admin.categories.index')
-                ->with('error', 'পণ্য থাকলে ক্যাটাগরি ম�ছে ফেলা যাবে না। প্রথমে পণ্য সরিয়ে ফেলুন।');
+                ->with('error', 'পণ্য থাকলে ক্যাটাগরি মুছে ফেলা যাবে না। প্রথমে পণ্য সরিয়ে ফেলুন।');
         }
 
         $category->delete();

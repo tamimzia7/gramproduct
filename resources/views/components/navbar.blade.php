@@ -39,6 +39,10 @@
                         @endif
                     </ul>
                 </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}" href="{{ route('products.index') }}">পণ্যসমূহ</a>
+                </li>
             </ul>
 
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
@@ -60,6 +64,11 @@
                         @if (auth()->user()->can('manage-categories'))
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}" href="{{ route('admin.categories.index') }}">ক্যাটাগরি ব্যবস্থাপনা</a>
+                            </li>
+                        @endif
+                        @if (auth()->user()->can('manage-products'))
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}" href="{{ route('admin.products.index') }}">পণ্য ব্যবস্থাপনা</a>
                             </li>
                         @endif
                     @endif

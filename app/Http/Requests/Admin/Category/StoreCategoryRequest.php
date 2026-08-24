@@ -26,6 +26,4 @@ class StoreCategoryRequest extends FormRequest
             'seo_description' => ['nullable', 'string'],
         ];
     }
-
-
 }

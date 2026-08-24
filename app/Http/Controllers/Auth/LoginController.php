@@ -19,7 +19,7 @@ class LoginController extends Controller
     {
         if (! Auth::validate($request->safe()->only('email', 'password'))) {
             return back()->withErrors([
-                'email' => 'The provided credentials do not match our records.',
+                'email' => 'প্রদত্ত তথ্য আমাদের রেকর্ডের সাথে মেলে না।',
             ])->onlyInput('email');
         }
 
@@ -27,7 +27,7 @@ class LoginController extends Controller
 
         if ($user && ! $user->isActive()) {
             return back()->withErrors([
-                'email' => 'This account is inactive. Please contact support.',
+                'email' => 'এই অ্যাকাউন্টটি নিষ্ক্রিয়। অনুগ্রহ করে সাপোর্টের সাথে যোগাযোগ করুন।',
             ])->onlyInput('email');
         }
 

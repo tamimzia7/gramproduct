@@ -1,17 +1,17 @@
-<x-layouts.app title="Admin Dashboard">
+<x-layouts.app title="অ্যাডমিন ড্যাশবোর্ড">
     <div class="container py-5">
-        <h1 class="h3 mb-4">Admin Dashboard</h1>
+        <h1 class="h3 mb-4">অ্যাডমিন ড্যাশবোর্ড</h1>
 
         <div class="alert alert-info">
-            The admin foundation is in place. Role &amp; permission management and module administration
-            will be built in the Admin module phase.
+            অ্যাডমিন ভিত্তি তৈরি হয়েছে। ভূমিকা ও অনুমতি ব্যবস্থাপনা এবং মডিউল পরিচালনা
+            অ্যাডমিন মডিউল পর্যায়ে তৈরি করা হবে।
         </div>
 
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-body">
-                        <h2 class="h6 text-muted">Logged in as</h2>
+                        <h2 class="h6 text-muted">লগইন করেছেন</h2>
                         <p class="mb-0">{{ auth()->user()->name }}</p>
                         <p class="text-muted small mb-0">{{ auth()->user()->roles->pluck('name')->join(', ') }}</p>
                     </div>
