@@ -46,6 +46,22 @@
             </ul>
 
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                @auth
+                    @php
+                        $wishlistCount = \App\Models\WishlistItem::where('user_id', auth()->id())->count();
+                    @endphp
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="{{ route('wishlist.index') }}" id="wishlist-link">
+                            <i class="bi bi-heart fs-5"></i>
+                            @if ($wishlistCount > 0)
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger wishlist-badge"
+                                      style="font-size:0.65rem;">
+                                    {{ $wishlistCount }}
+                                </span>
+                            @endif
+                        </a>
+                    </li>
+                @endauth
                 <x-cart.mini-cart />
                 @guest
                     <li class="nav-item">

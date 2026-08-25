@@ -135,6 +135,13 @@
                         <button type="submit" class="btn btn-success btn-lg" id="addToCartBtn">
                             <i class="bi bi-cart-plus me-1"></i>কার্টে যোগ করুন
                         </button>
+                        @auth
+                            <button type="button" class="btn btn-outline-danger btn-lg" id="addToWishlistBtn"
+                                    data-product-id="{{ $product->id }}"
+                                    data-variant-id="{{ $product->variants->first()?->id }}">
+                                <i class="bi bi-heart" id="wishlistIcon"></i>
+                            </button>
+                        @endauth
                     </div>
 
                     <div id="cartMessage" class="mt-3" style="display:none;"></div>
@@ -200,6 +207,65 @@
             document.querySelectorAll('.variant-radio').forEach(radio => {
                 radio.addEventListener('change', function () {
                     document.getElementById('selectedVariantId').value = this.dataset.variantId;
+                    const wishlistBtn = document.getElementById('addToWishlistBtn');
+                    if (wishlistBtn) {
+                        wishlistBtn.dataset.variantId = this.dataset.variantId;
+                    }
+                });
+            });
+
+            document.getElementById('addToWishlistBtn')?.addEventListener('click', function () {
+                const btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+                fetch('{{ route("wishlist.store") }}', {
+                    method: 'POST',
+                    headers: { ...headers, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        product_id: btn.dataset.productId,
+                        product_variant_id: btn.dataset.variantId || null,
+                    }),
+                })
+                .then(res => res.json())
+                .then(data => {
+                    btn.disabled = false;
+                    if (data.success) {
+                        btn.innerHTML = '<i class="bi bi-heart-fill"></i>';
+                        btn.classList.remove('btn-outline-danger');
+                        btn.classList.add('btn-danger');
+
+                        const badge = document.querySelector('.wishlist-badge');
+                        if (badge) {
+                            badge.textContent = data.wishlist_count;
+                        } else {
+                            const navLink = document.querySelector('#wishlist-link');
+                            if (navLink) {
+                                const newBadge = document.createElement('span');
+                                newBadge.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger wishlist-badge';
+                                newBadge.style.cssText = 'font-size:0.65rem;';
+                                newBadge.textContent = data.wishlist_count;
+                                navLink.appendChild(newBadge);
+                            }
+                        }
+
+                        const msg = document.getElementById('cartMessage');
+                        msg.style.display = 'block';
+                        msg.className = 'alert alert-success';
+                        msg.textContent = data.message;
+                        setTimeout(() => { msg.style.display = 'none'; }, 4000);
+                    } else {
+                        btn.innerHTML = '<i class="bi bi-heart"></i>';
+                        const msg = document.getElementById('cartMessage');
+                        msg.style.display = 'block';
+                        msg.className = 'alert alert-danger';
+                        msg.textContent = data.message || 'একটি ত্রুটি ঘটেছে।';
+                        setTimeout(() => { msg.style.display = 'none'; }, 4000);
+                    }
+                })
+                .catch(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-heart"></i>';
                 });
             });
 

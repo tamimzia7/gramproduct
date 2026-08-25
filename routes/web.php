@@ -13,6 +13,7 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Customer\AddressController;
+use App\Http\Controllers\Customer\AddressController;
 use App\Http\Controllers\Customer\ProfileController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
@@ -103,4 +104,11 @@ Route::prefix('cart')->name('cart.')->group(function () {
     Route::put('/{cartItem}', [CartController::class, 'update'])->name('update');
     Route::delete('/{cartItem}', [CartController::class, 'remove'])->name('remove');
     Route::delete('/clear', [CartController::class, 'clear'])->name('clear');
+});
+
+Route::middleware('auth')->prefix('wishlist')->name('wishlist.')->group(function () {
+    Route::get('/', [WishlistController::class, 'index'])->name('index');
+    Route::post('/', [WishlistController::class, 'store'])->name('store');
+    Route::delete('/{wishlistItem}', [WishlistController::class, 'destroy'])->name('destroy');
+    Route::post('/{wishlistItem}/move-to-cart', [WishlistController::class, 'moveToCart'])->name('move-to-cart');
 });
