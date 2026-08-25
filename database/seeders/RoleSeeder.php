@@ -19,6 +19,11 @@ class RoleSeeder extends Seeder
         'manage-staff',
         'manage-settings',
         'view-reports',
+        // Product মডিউলের granular permission (ProductPolicy ব্যবহার করে)
+        'products.view',
+        'products.create',
+        'products.edit',
+        'products.delete',
     ];
 
     public function run(): void
@@ -39,7 +44,16 @@ class RoleSeeder extends Seeder
             'product-manager' => [
                 'name' => 'Product Manager',
                 'description' => 'Manages products and categories.',
-                'permissions' => ['view-dashboard', 'manage-products', 'manage-categories', 'view-reports'],
+                'permissions' => [
+                    'view-dashboard',
+                    'manage-products',
+                    'manage-categories',
+                    'view-reports',
+                    'products.view',
+                    'products.create',
+                    'products.edit',
+                    'products.delete',
+                ],
                 'is_system' => true,
             ],
             'order-manager' => [

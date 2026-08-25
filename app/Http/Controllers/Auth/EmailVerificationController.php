@@ -28,7 +28,7 @@ class EmailVerificationController extends Controller
             event(new Verified($user));
         }
 
-        return redirect()->route('home')->with('status', 'Your email has been verified.');
+        return redirect()->route('home')->with('status', 'আপনার ইমেইল সফলভাবে যাচাই হয়েছে।');
     }
 
     public function resend(Request $request): RedirectResponse
@@ -41,6 +41,6 @@ class EmailVerificationController extends Controller
 
         $user->sendEmailVerificationNotification();
 
-        return back()->with('status', 'A verification link has been sent to your email.');
+        return back()->with('status', 'আপনার ইমেইলে একটি যাচাইকরণ লিংক পাঠানো হয়েছে।');
     }
 }

@@ -4,12 +4,12 @@
             <div class="col-md-6">
                 <h5 class="fw-bold">{{ config('app.name', 'Gram Product') }}</h5>
                 <p class="small text-secondary mb-0">
-                    From the village, field and water to your home. Authentic village-origin food &amp; agricultural products.
+                    গ্রাম, মাঠ ও নদী থেকে সরাসরি আপনার ঘরে। খাঁটি গ্রামীণ খাদ্য ও কৃষিপণ্য।
                 </p>
             </div>
             <div class="col-md-6 text-md-end">
                 <p class="small text-secondary mb-0">
-                    &copy; {{ date('Y') }} {{ config('app.name', 'Gram Product') }}. All rights reserved.
+                    &copy; {{ date('Y') }} {{ config('app.name', 'Gram Product') }}। সর্বস্বত্ব সংরক্ষিত।
                 </p>
             </div>
         </div>

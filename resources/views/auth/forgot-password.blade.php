@@ -1,12 +1,12 @@
-<x-layouts.app title="Forgot Password">
+<x-layouts.app title="পাসওয়ার্ড রিসেট">
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
                 <div class="card shadow-sm">
                     <div class="card-body p-4">
-                        <h1 class="h4 mb-3 text-center">Forgot your password?</h1>
+                        <h1 class="h4 mb-3 text-center">পাসওয়ার্ড ভুলে গেছেন?</h1>
                         <p class="text-muted small mb-4">
-                            Enter your email address and we'll send you a password reset link.
+                            আপনার ইমেইল ঠিকানা দিন, আমরা পাসওয়ার্ড রিসেট লিংক পাঠিয়ে দেব।
                         </p>
 
                         @if (session('status'))
@@ -27,7 +27,7 @@
                             @csrf
 
                             <div class="mb-3">
-                                <label for="email" class="form-label">Email address</label>
+                                <label for="email" class="form-label">ইমেইল ঠিকানা</label>
                                 <input type="email" id="email" name="email"
                                        class="form-control @error('email') is-invalid @enderror"
                                        value="{{ old('email') }}" required>
@@ -36,10 +36,10 @@
                                 @enderror
                             </div>
 
-                            <button type="submit" class="btn btn-success w-100">Send reset link</button>
+                            <button type="submit" class="btn btn-success w-100">রিসেট লিংক পাঠান</button>
 
                             <div class="text-center mt-3">
-                                <a href="{{ route('login') }}" class="small">Back to login</a>
+                                <a href="{{ route('login') }}" class="small">লগইনে ফিরে যান</a>
                             </div>
                         </form>
                     </div>

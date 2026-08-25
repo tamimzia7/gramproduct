@@ -44,6 +44,11 @@ class ProductVariant extends Model
         return $query->where('is_active', true);
     }
 
+    public function scopeOrdered(Builder $query): Builder
+    {
+        return $query->orderBy('sort_order')->orderBy('id');
+    }
+
     public function isActive(): bool
     {
         return (bool) $this->is_active;
