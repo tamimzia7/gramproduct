@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\InventoryController as AdminInventoryController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantController;
 use App\Http\Controllers\Auth\EmailVerificationController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\Customer\AddressController;
 use App\Http\Controllers\Customer\ProfileController;
@@ -77,6 +79,16 @@ Route::middleware(['auth', 'can:admin.access'])->group(function () {
     Route::resource('admin/products/{product}/variants', AdminProductVariantController::class)
         ->except(['show'])
         ->names('admin.products.variants');
+
+    Route::resource('admin/inventories', AdminInventoryController::class)
+        ->except(['show'])
+        ->names('admin.inventories');
+
+    Route::put('admin/inventories/{inventory}/adjust', [AdminInventoryController::class, 'adjust'])
+        ->name('admin.inventories.adjust');
+
+    Route::get('admin/inventories/{inventory}/history', [AdminInventoryController::class, 'history'])
+        ->name('admin.inventories.history');
 });
 
 Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
@@ -84,3 +96,11 @@ Route::get('/categories/{category:slug}', [CategoryController::class, 'show'])->
 
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+
+Route::prefix('cart')->name('cart.')->group(function () {
+    Route::get('/', [CartController::class, 'index'])->name('index');
+    Route::post('/add', [CartController::class, 'add'])->name('add');
+    Route::put('/{cartItem}', [CartController::class, 'update'])->name('update');
+    Route::delete('/{cartItem}', [CartController::class, 'remove'])->name('remove');
+    Route::delete('/clear', [CartController::class, 'clear'])->name('clear');
+});

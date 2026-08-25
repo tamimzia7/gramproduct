@@ -76,12 +76,14 @@
                 @if ($product->variants->isNotEmpty())
                     <div class="mb-4">
                         <h5 class="h6 mb-3">প্যাকেজ নির্বাচন করুন</h5>
-                        <div class="list-group">
+                        <div class="list-group variant-selector">
                             @foreach ($product->variants as $variant)
                                 <label class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                     <div>
                                         <input type="radio" name="selected_variant" value="{{ $variant->id }}"
-                                               class="form-check-input me-2" {{ $loop->first ? 'checked' : '' }}>
+                                               class="form-check-input me-2 variant-radio"
+                                               data-variant-id="{{ $variant->id }}"
+                                               {{ $loop->first ? 'checked' : '' }}>
                                         <span class="fw-semibold">{{ $variant->name }}</span>
                                         @if ($variant->weight)
                                             <small class="text-muted ms-1">({{ number_format($variant->weight, 2) }} {{ $variant->unit }})</small>
@@ -104,6 +106,39 @@
                 @if ($product->short_description)
                     <p class="lead">{{ $product->short_description }}</p>
                 @endif
+
+                <form id="addToCartForm" class="mb-4">
+                    @csrf
+                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                    @if ($product->variants->isNotEmpty())
+                        <input type="hidden" name="product_variant_id" id="selectedVariantId"
+                               value="{{ $product->variants->first()?->id }}">
+                    @else
+                        <input type="hidden" name="product_variant_id" value="">
+                    @endif
+
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <label for="quantity" class="form-label mb-0 fw-semibold">পরিমাণ:</label>
+                        <div class="input-group" style="width:140px;">
+                            <button class="btn btn-outline-secondary" type="button" id="qtyMinus">
+                                <i class="bi bi-dash"></i>
+                            </button>
+                            <input type="number" class="form-control text-center" id="quantity" name="quantity"
+                                   value="1" min="1">
+                            <button class="btn btn-outline-secondary" type="button" id="qtyPlus">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success btn-lg" id="addToCartBtn">
+                            <i class="bi bi-cart-plus me-1"></i>কার্টে যোগ করুন
+                        </button>
+                    </div>
+
+                    <div id="cartMessage" class="mt-3" style="display:none;"></div>
+                </form>
 
                 @if ($product->sku)
                     <p class="small text-muted">SKU: {{ $product->sku }}</p>
@@ -151,4 +186,89 @@
             </div>
         @endif
     </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const headers = {
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            };
+
+            document.querySelectorAll('.variant-radio').forEach(radio => {
+                radio.addEventListener('change', function () {
+                    document.getElementById('selectedVariantId').value = this.dataset.variantId;
+                });
+            });
+
+            document.getElementById('qtyMinus')?.addEventListener('click', function () {
+                const input = document.getElementById('quantity');
+                const val = parseInt(input.value);
+                if (val > 1) input.value = val - 1;
+            });
+
+            document.getElementById('qtyPlus')?.addEventListener('click', function () {
+                const input = document.getElementById('quantity');
+                const val = parseInt(input.value);
+                input.value = val + 1;
+            });
+
+            document.getElementById('addToCartForm')?.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const form = this;
+                const btn = document.getElementById('addToCartBtn');
+                const msg = document.getElementById('cartMessage');
+
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>যোগ করা হচ্ছে...';
+
+                fetch('{{ route("cart.add") }}', {
+                    method: 'POST',
+                    headers: { ...headers, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        product_id: form.querySelector('[name="product_id"]').value,
+                        product_variant_id: form.querySelector('[name="product_variant_id"]').value || null,
+                        quantity: form.querySelector('[name="quantity"]').value,
+                    }),
+                })
+                .then(res => res.json())
+                .then(data => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-cart-plus me-1"></i>কার্টে যোগ করুন';
+
+                    msg.style.display = 'block';
+                    msg.className = 'alert ' + (data.success ? 'alert-success' : 'alert-danger');
+                    msg.textContent = data.message;
+
+                    if (data.success) {
+                        const badge = document.querySelector('.mini-cart-badge');
+                        if (badge) {
+                            badge.textContent = data.cart.item_count;
+                        } else {
+                            const cartLink = document.querySelector('#mini-cart-dropdown .nav-link');
+                            if (cartLink) {
+                                const newBadge = document.createElement('span');
+                                newBadge.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger mini-cart-badge';
+                                newBadge.style.cssText = 'font-size:0.65rem;';
+                                newBadge.textContent = data.cart.item_count;
+                                cartLink.appendChild(newBadge);
+                            }
+                        }
+                    }
+
+                    setTimeout(() => { msg.style.display = 'none'; }, 4000);
+                })
+                .catch(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-cart-plus me-1"></i>কার্টে যোগ করুন';
+                    msg.style.display = 'block';
+                    msg.className = 'alert alert-danger';
+                    msg.textContent = 'একটি ত্রুটি ঘটেছে। আবার চেষ্টা করুন।';
+                });
+            });
+        });
+    </script>
+    @endpush
 </x-layouts.app>

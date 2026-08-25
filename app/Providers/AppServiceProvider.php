@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\Cart;
 use App\Models\Category;
 use App\Models\User;
 use App\Policies\CustomerPolicy;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -39,6 +41,16 @@ class AppServiceProvider extends ServiceProvider
                 ->with(['children' => fn ($query) => $query->active()->ordered()])
                 ->ordered()
                 ->get());
+
+            $cart = null;
+            if (auth()->check()) {
+                $cart = Cart::where('user_id', auth()->id())->with('items.product', 'items.variant')->first();
+            } elseif (Session::has('cart_session_id')) {
+                $cart = Cart::where('session_id', Session::get('cart_session_id'))
+                    ->with('items.product', 'items.variant')->first();
+            }
+
+            $view->with('cart', $cart);
         });
     }
 }

@@ -14,7 +14,7 @@ Foundation (Phase 01)
 IN PROGRESS
 
 ## Last Updated
-2026-08-25 12:00
+2026-08-25 15:00
 
 ---
 
@@ -314,3 +314,63 @@ Phase 02 — Dynamic Catalog: Category module (migration per overview section 5,
 - Fix `home.blade.php` direct DB query (Category::active in Blade view — violates architecture rules)
 - Module 04-20 per 20-module spec
 - Admin module full UI, and remaining modules per 20-module spec
+
+### 2026-08-25
+
+#### Completed
+- Created `docs/OPEN-QUESTIONS.md` documenting 9 blocking questions for Module 06 — Inventory.
+- Inventory documentation (`docs/06-inventory.md`) is insufficient to implement specific functionality.
+- Questions cover: stock fields, adjustment workflow, low-stock behavior, stock history, wastage, fresh products, authorization, validation.
+- Product module verified complete against `docs/04-product.md` and master overview section 10.
+- All documented Product fields implemented: name, SKU, slug, category, descriptions, image, pricing, unit, product_type, status flags, origin, farmer_name, seasonal_info, SEO fields.
+- All 20 Product tests pass.
+- Updated PROJECT-TRACKING.md.
+
+#### Verified
+- Product module fully implements documented requirements
+- All Product tests pass (20/20)
+- Inventory module blocked by insufficient documentation
+- Open questions recorded for future resolution
+
+#### Remaining
+- Inventory module implementation (blocked by documentation)
+- Fix `home.blade.php` direct DB query
+- Remaining modules per 20-module spec
+
+### 2026-08-25
+
+#### Completed
+- Implemented Module 06 — Inventory based on `docs/06-inventory.md` and master overview section 12.
+- Created migration `2026_08_25_043055_create_inventories_table` with stock tracking fields.
+- Created migration `2026_08_25_043057_create_stock_adjustments_table` for stock history.
+- Created `Inventory` model with relationships to Product, ProductVariant, and StockAdjustment.
+- Created `StockAdjustment` model with type constants (stock_in, stock_out, adjustment, wastage, damage).
+- Created `InventoryService` for stock in, stock out, stock adjustment, wastage, and damage operations.
+- Created admin `InventoryController` with index, create, store, edit, adjust, destroy, and history actions.
+- Created Form Requests: `StoreInventoryRequest`, `AdjustStockRequest`, `UpdateThresholdRequest`.
+- Created admin Blade views: index (list with filtering), create (add stock), edit (adjust stock), history (audit trail).
+- Added routes for inventory CRUD, adjust, and history.
+- Used existing `manage-inventory` permission from RoleSeeder.
+- Created `InventoryTest` with 16 tests covering: authorization, stock operations, low-stock detection, out-of-stock detection, available quantity, variant inventory, filtering, history, validation.
+- All 16 inventory tests pass; all 107 tests across all modules pass.
+- Ran Pint on modified files.
+- npm build passes.
+
+#### Verified
+- Admin can add stock to products
+- Admin can adjust stock levels
+- Stock history is recorded with type, quantities, reason, and user
+- Low-stock detection works (quantity <= threshold)
+- Out-of-stock detection works (quantity <= 0)
+- Available quantity correctly excludes reserved stock
+- Product variant inventory is supported
+- Duplicate product/variant combinations are prevented
+- Search filtering works
+- History page shows audit trail
+- All form validation works
+- Authorization enforced (manage-inventory permission)
+- All tests pass; Pint clean; npm build passes
+
+#### Remaining
+- Fix `home.blade.php` direct DB query (Category::active in Blade view — violates architecture rules)
+- Remaining modules per 20-module spec
