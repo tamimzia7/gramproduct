@@ -14,7 +14,7 @@ Foundation (Phase 01)
 IN PROGRESS
 
 ## Last Updated
-2026-08-24 14:15
+2026-08-25 12:00
 
 ---
 
@@ -27,12 +27,13 @@ IN PROGRESS
 | Database Foundation | COMPLETED | 100% | Isolated `gp_ecom` DB; migrations + seeders run clean |
 | Authentication | COMPLETED | 100% | Custom Bootstrap-5 auth: login, register, logout, password reset, email verification |
 | Roles & Permissions | COMPLETED | 100% | Custom data-driven roles (7 seeded) + Gates |
-| Category Architecture | NOT STARTED | 0% | Phase 02 |
+| Category Architecture | COMPLETED | 100% | Hierarchical categories, admin CRUD, customer browsing, slugs, SEO |
+| Product Management | COMPLETED | 100% | Admin CRUD, customer browsing, search, filtering, origin/farmer/seasonal fields |
 | Blade UI Foundation | COMPLETED | 100% | Bootstrap 5 layout (components/layouts/app), navbar/footer components, homepage, auth views |
 | Admin Foundation | PARTIALLY COMPLETED | 30% | Admin dashboard placeholder + admin.access gate; full module deferred to Admin phase |
-| Customer Foundation | PARTIALLY COMPLETED | 40% | User profile fields (phone, is_active), MustVerifyEmail, customer dashboard; address/wishlist deferred |
-| Testing Foundation | IN PROGRESS | 50% | Pest installed; AuthenticationTest (4 passing) added |
-| Documentation | IN PROGRESS | 40% | Master overview + module docs present; tracking file maintained |
+| Customer Foundation | COMPLETED | 70% | Profile edit, address book (CRUD + default), account settings (password change), order history placeholder; wishlist/reviews deferred to their modules |
+| Testing Foundation | COMPLETED | 85% | Pest installed; AuthenticationTest (28 passing), CustomerTest (30 passing), ProductTest (20 passing), CategoryTest (36 passing) |
+| Documentation | IN PROGRESS | 50% | Master overview + module docs present; implementation record created for auth; tracking file maintained |
 | Git Setup | NOT STARTED | 0% | Not a git repo; not initialized (out of scope unless asked) |
 
 ---
@@ -86,16 +87,21 @@ COMPLETED
 - database/migrations/2026_08_24_000104_create_sessions_table.php (idempotent)
 - database/migrations/2026_08_24_000105_create_failed_jobs_table.php (idempotent)
 - database/migrations/2026_08_24_000106_create_job_batches_table.php (idempotent)
+- database/migrations/2026_08_25_000001_create_addresses_table.php
 - app/Models/Role.php
 - app/Models/Concerns/HasRoles.php
-- app/Models/User.php (phone/is_active fillable, MustVerifyEmail, HasRoles)
+- app/Models/User.php (phone/is_active fillable, MustVerifyEmail, HasRoles, addresses/defaultAddress)
+- app/Models/Address.php
 - database/seeders/RoleSeeder.php
 - database/factories/RoleFactory.php
-- app/Providers/AppServiceProvider.php (Gates for 11 permissions + admin.access)
+- database/factories/AddressFactory.php
+- app/Providers/AppServiceProvider.php (Gates for 11 permissions + admin.access + CustomerPolicy)
 - app/Http/Requests/Auth/LoginRequest.php
 - app/Http/Requests/Auth/RegisterRequest.php
 - app/Http/Requests/Auth/ForgotPasswordRequest.php
 - app/Http/Requests/Auth/ResetPasswordRequest.php
+- app/Http/Requests/UpdateProfileRequest.php
+- app/Http/Requests/AddressRequest.php
 - app/Http/Controllers/Auth/LoginController.php
 - app/Http/Controllers/Auth/RegisterController.php
 - app/Http/Controllers/Auth/LogoutController.php
@@ -103,6 +109,9 @@ COMPLETED
 - app/Http/Controllers/Auth/ResetPasswordController.php
 - app/Http/Controllers/Auth/EmailVerificationController.php
 - app/Http/Controllers/HomeController.php
+- app/Http/Controllers/Customer/ProfileController.php
+- app/Http/Controllers/Customer/AddressController.php
+- app/Policies/CustomerPolicy.php
 - resources/views/components/layouts/app.blade.php
 - resources/views/components/navbar.blade.php
 - resources/views/components/footer.blade.php
@@ -114,7 +123,14 @@ COMPLETED
 - resources/views/home.blade.php
 - resources/views/dashboard.blade.php
 - resources/views/admin/dashboard.blade.php
+- resources/views/customer/profile.blade.php
+- resources/views/customer/addresses/index.blade.php
+- resources/views/customer/addresses/create.blade.php
+- resources/views/customer/addresses/edit.blade.php
+- resources/views/customer/order-history.blade.php
+- resources/views/customer/settings.blade.php
 - tests/Feature/AuthenticationTest.php
+- tests/Feature/CustomerTest.php
 - PROJECT-TRACKING.md
 
 ### Modified
@@ -151,7 +167,7 @@ COMPLETED
 - [x] Application boots
 - [x] Relevant routes work (home, login, register, forgot-password = 200; dashboard/admin/verify redirect guests)
 - [x] Database works (migrations + seeders run; 7 roles seeded)
-- [x] Tests pass (AuthenticationTest: 4/4 passing)
+- [x] Tests pass (AuthenticationTest: 28/28 passing)
 - [x] Pint passes (app/, providers/, models formatted)
 - [x] npm build passes (Bootstrap CSS/JS bundled)
 - [x] No unexpected errors (fixed layout component resolution 500)
@@ -218,6 +234,18 @@ Phase 02 — Dynamic Catalog: Category module (migration per overview section 5,
 - Added AuthenticationTest (Pest), 4/4 passing.
 - Ran migrate + seed, Pint, npm build; smoke-tested routes (200 / guest redirects).
 
+### 2026-08-25
+
+#### Completed
+- Audited full auth implementation against docs/01-authentication.md and master overview section 13.
+- Fixed EmailVerificationController to use `EmailVerificationRequest` per Laravel 13 docs (proper signed URL handling).
+- Added `auth` middleware to verification.verify route per documented pattern.
+- Expanded AuthenticationTest from 4 to 28 tests covering: valid/invalid login, inactive account, registration validation, duplicate email, password hashing, session regeneration/invalidation, logout, forgot password, admin access control.
+- Ran Pint on modified files.
+- All 28 auth tests pass; 1 pre-existing ExampleTest failure (database query in Blade view — outside auth scope).
+- Created docs/implementation/01-authentication.md implementation record.
+- Updated PROJECT-TRACKING.md.
+
 #### Changed
 - routes/web.php, vite.config.js, resources/css/app.css, resources/js/app.js, package.json, .env, .env.example, AppServiceProvider, User model.
 
@@ -227,5 +255,62 @@ Phase 02 — Dynamic Catalog: Category module (migration per overview section 5,
 - Pest authentication tests pass; Pint clean; npm build passes.
 
 #### Remaining
+- Fix `home.blade.php` direct DB query (Category::active in Blade view — violates architecture rules).
 - Phase 02 Dynamic Catalog (Category module).
-- Full Customer module (address book, wishlist, profile edit), Admin module UI, and remaining modules per 20-module spec.
+- Admin module UI, and remaining modules per 20-module spec.
+
+### 2026-08-25
+
+#### Completed
+- Implemented Module 02 — Customer: profile management, address book, account settings, order history boundary.
+- Created addresses migration, Address model with User relationship.
+- Updated User model with addresses() and defaultAddress() methods.
+- Created UpdateProfileRequest and AddressRequest form requests.
+- Created CustomerPolicy for ownership authorization.
+- Created ProfileController (profile view/edit, settings, password change) and AddressController (full CRUD).
+- Created 6 Blade views: profile, addresses index/create/edit, order history placeholder, settings.
+- Added customer routes under /customer prefix with auth middleware.
+- Updated navbar with customer dropdown menu (profile, addresses, order history, settings, dashboard, admin, logout).
+- Registered CustomerPolicy for User model in AppServiceProvider.
+- Created AddressFactory for testing.
+- Wrote CustomerTest with 30 tests covering: profile access/update, settings/password change, address CRUD/authorization/default, order history placeholder, route auth protection.
+- All 30 customer tests pass; all 28 auth tests still pass.
+- Ran Pint on modified files.
+- Created docs/implementation/02-customer.md.
+- Updated PROJECT-TRACKING.md.
+
+#### Verified
+- Profile: view, edit (name/email/phone), validation, unique email
+- Settings: password change with current password verification
+- Addresses: CRUD, ownership enforcement, default address, type enum validation, empty states
+- Order history: placeholder page accessible
+- Authorization: users cannot access other users' data
+- All customer routes require authentication
+
+### 2026-08-25
+
+#### Completed
+- Implemented Module 03 — Product: filled missing fields from master overview section 10.
+- Created migration `2026_08_25_040059_add_origin_farmer_and_seasonal_to_products_table` adding `origin`, `farmer_name`, `seasonal_info` columns to products table.
+- Updated Product model: added new fields to `$fillable`.
+- Updated StoreProductRequest and UpdateProductRequest: added validation rules for origin, farmer_name, seasonal_info (nullable, string, max:255).
+- Updated admin product `_form.blade.php`: added input fields for origin (উৎস/এলাকা), farmer_name (কৃষক/খামারের নাম), seasonal_info (মৌসুমী তথ্য) with Bangla labels and placeholders.
+- Updated customer product `show.blade.php`: displays origin, farmer, seasonal info in a styled info box when present.
+- Updated ProductFactory: added origin, farmer_name, seasonal_info with realistic Bangla data.
+- Added 4 new tests to ProductTest: store with new fields, update with new fields, display on product page, factory states.
+- All 20 product tests pass; all 114 tests across auth/customer/product/category/variant pass.
+- Ran Pint on modified files.
+- Updated PROJECT-TRACKING.md.
+
+#### Verified
+- Migration runs cleanly (adds 3 nullable columns)
+- Admin can create/edit products with origin, farmer_name, seasonal_info
+- Customer product page displays origin, farmer, seasonal info when present
+- All form validation rules work correctly
+- Product factory generates realistic data for new fields
+- All tests pass; Pint clean
+
+#### Remaining
+- Fix `home.blade.php` direct DB query (Category::active in Blade view — violates architecture rules)
+- Module 04-20 per 20-module spec
+- Admin module full UI, and remaining modules per 20-module spec

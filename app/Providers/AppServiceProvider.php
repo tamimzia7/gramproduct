@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Category;
 use App\Models\User;
+use App\Policies\CustomerPolicy;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
@@ -24,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::policy(User::class, CustomerPolicy::class);
+
         Gate::define('admin.access', fn (User $user) => $user->isActive() && $user->hasAnyRole());
 
         foreach (RoleSeeder::PERMISSIONS as $permission) {

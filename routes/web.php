@@ -10,6 +10,8 @@ use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Customer\AddressController;
+use App\Http\Controllers\Customer\ProfileController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
@@ -40,11 +42,23 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
         ->name('verification.verify')
-        ->middleware('signed');
+        ->middleware(['auth', 'signed']);
 
     Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
         ->name('verification.send')
         ->middleware('throttle:6,1');
+
+    Route::prefix('customer')->name('customer.')->group(function () {
+        Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+        Route::get('/settings', [ProfileController::class, 'settings'])->name('settings');
+        Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
+
+        Route::get('/order-history', fn () => view('customer.order-history'))->name('order-history');
+
+        Route::resource('addresses', AddressController::class)->except(['show']);
+    });
 });
 
 Route::middleware(['auth', 'can:admin.access'])->group(function () {

@@ -31,6 +31,9 @@ class Product extends Model
         'is_bestseller',
         'is_new_arrival',
         'is_active',
+        'origin',
+        'farmer_name',
+        'seasonal_info',
         'seo_title',
         'seo_description',
     ];

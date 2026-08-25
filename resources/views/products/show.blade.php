@@ -112,6 +112,20 @@
                 @if ($product->product_type)
                     <p class="small text-muted">ধরন: {{ $product->product_type }}</p>
                 @endif
+
+                @if ($product->origin || $product->farmer_name || $product->seasonal_info)
+                    <div class="mb-3 p-3 bg-light rounded">
+                        @if ($product->origin)
+                            <p class="mb-1 small"><strong>উৎস/এলাকা:</strong> {{ $product->origin }}</p>
+                        @endif
+                        @if ($product->farmer_name)
+                            <p class="mb-1 small"><strong>কৃষক/খামার:</strong> {{ $product->farmer_name }}</p>
+                        @endif
+                        @if ($product->seasonal_info)
+                            <p class="mb-0 small"><strong>মৌসুম:</strong> {{ $product->seasonal_info }}</p>
+                        @endif
+                    </div>
+                @endif
             </div>
         </div>
 

@@ -197,3 +197,60 @@ test('product category breadcrumb works', function () {
 
     expect($breadcrumb->pluck('name')->toArray())->toBe(['চাল', 'স্থানীয় চাল', 'নাজিরশাইল']);
 });
+
+test('admin can store product with origin, farmer and seasonal info', function () {
+    $category = Category::factory()->create();
+
+    $this->actingAs(productAdminUser())
+        ->post(route('admin.products.store'), [
+            'category_id' => $category->id,
+            'name' => 'অর্গানিক চাল',
+            'sku' => 'RICE-ORC-001',
+            'base_price' => 200,
+            'origin' => 'বগুড়া',
+            'farmer_name' => 'করিম উদ্দিন',
+            'seasonal_info' => 'শীতকালীন',
+        ])
+        ->assertRedirect(route('admin.products.index'));
+
+    $product = Product::where('sku', 'RICE-ORC-001')->first();
+    expect($product->origin)->toBe('বগুড়া');
+    expect($product->farmer_name)->toBe('করিম উদ্দিন');
+    expect($product->seasonal_info)->toBe('শীতকালীন');
+});
+
+test('admin can update product with origin, farmer and seasonal info', function () {
+    $product = Product::factory()->create();
+
+    $this->actingAs(productAdminUser())
+        ->put(route('admin.products.update', $product), [
+            'category_id' => $product->category_id,
+            'name' => $product->name,
+            'sku' => $product->sku,
+            'base_price' => $product->base_price,
+            'origin' => 'রাজশাহী',
+            'farmer_name' => 'আব্দুল হামিদ',
+            'seasonal_info' => 'সারা বছর',
+        ])
+        ->assertRedirect(route('admin.products.index'));
+
+    $product->refresh();
+    expect($product->origin)->toBe('রাজশাহী');
+    expect($product->farmer_name)->toBe('আব্দুল হামিদ');
+    expect($product->seasonal_info)->toBe('সারা বছর');
+});
+
+test('origin farmer and seasonal info are displayed on product page', function () {
+    $product = Product::factory()->create([
+        'origin' => 'দিনাজপুর',
+        'farmer_name' => 'রহিম উদ্দিন',
+        'seasonal_info' => 'গ্রীষ্মকালীন',
+        'is_active' => true,
+    ]);
+
+    $this->get(route('products.show', $product->slug))
+        ->assertOk()
+        ->assertSee('দিনাজপুর')
+        ->assertSee('রহিম উদ্দিন')
+        ->assertSee('গ্রীষ্মকালীন');
+});

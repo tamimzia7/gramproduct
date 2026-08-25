@@ -54,29 +54,55 @@
                         <a class="nav-link" href="{{ route('register') }}">রেজিস্টার</a>
                     </li>
                 @else
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">ড্যাশবোর্ড</a>
-                    </li>
-                    @if (auth()->user()->hasAnyRole())
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.*') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">অ্যাডমিন</a>
-                        </li>
-                        @if (auth()->user()->can('manage-categories'))
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}" href="{{ route('admin.categories.index') }}">ক্যাটাগরি ব্যবস্থাপনা</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('customer.*') ? 'active' : '' }}" href="#"
+                           role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle me-1"></i>{{ auth()->user()->name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{{ route('customer.profile') }}">
+                                    <i class="bi bi-person me-2"></i>প্রোফাইল
+                                </a>
                             </li>
-                        @endif
-                        @if (auth()->user()->can('manage-products'))
-                            <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}" href="{{ route('admin.products.index') }}">পণ্য ব্যবস্থাপনা</a>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('customer.addresses.index') }}">
+                                    <i class="bi bi-geo-alt me-2"></i>ঠিকানা
+                                </a>
                             </li>
-                        @endif
-                    @endif
-                    <li class="nav-item">
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="nav-link btn btn-link text-white p-0 ms-lg-2">লগআউট</button>
-                        </form>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('customer.order-history') }}">
+                                    <i class="bi bi-bag me-2"></i>অর্ডার ইতিহাস
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('customer.settings') }}">
+                                    <i class="bi bi-gear me-2"></i>সেটিংস
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('dashboard') }}">
+                                    <i class="bi bi-speedometer2 me-2"></i>ড্যাশবোর্ড
+                                </a>
+                            </li>
+                            @if (auth()->user()->hasAnyRole())
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('admin.dashboard') }}">
+                                        <i class="bi bi-shield-lock me-2"></i>অ্যাডমিন
+                                    </a>
+                                </li>
+                            @endif
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="bi bi-box-arrow-right me-2"></i>লগআউট
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
                     </li>
                 @endguest
             </ul>

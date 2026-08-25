@@ -124,6 +124,27 @@
             </div>
         </div>
 
+        <div class="mb-3">
+            <label for="origin" class="form-label">উৎস/এলাকা</label>
+            <input type="text" id="origin" name="origin" class="form-control @error('origin') is-invalid @enderror"
+                   value="{{ old('origin', $product?->origin) }}" placeholder="যেমন: বগুড়া, রাজশাহী">
+            @error('origin')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+
+        <div class="mb-3">
+            <label for="farmer_name" class="form-label">কৃষক/খামারের নাম</label>
+            <input type="text" id="farmer_name" name="farmer_name" class="form-control @error('farmer_name') is-invalid @enderror"
+                   value="{{ old('farmer_name', $product?->farmer_name) }}">
+            @error('farmer_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+
+        <div class="mb-3">
+            <label for="seasonal_info" class="form-label">মৌসুমী তথ্য</label>
+            <input type="text" id="seasonal_info" name="seasonal_info" class="form-control @error('seasonal_info') is-invalid @enderror"
+                   value="{{ old('seasonal_info', $product?->seasonal_info) }}" placeholder="যেমন: শীতকালীন, সারা বছর">
+            @error('seasonal_info')<div class="invalid-feedback">{{ $message }}</div>@enderror
+        </div>
+
         <div class="form-check form-switch mb-3">
             <input type="checkbox" id="is_active" name="is_active" value="1" class="form-check-input" @checked(old('is_active', $product?->is_active ?? true))>
             <label for="is_active" class="form-check-label">সক্রিয়</label>

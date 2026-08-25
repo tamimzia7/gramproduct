@@ -33,6 +33,9 @@ class UpdateProductRequest extends FormRequest
             'is_bestseller' => ['nullable', 'boolean'],
             'is_new_arrival' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
+            'origin' => ['nullable', 'string', 'max:255'],
+            'farmer_name' => ['nullable', 'string', 'max:255'],
+            'seasonal_info' => ['nullable', 'string', 'max:255'],
             'seo_title' => ['nullable', 'string', 'max:255'],
             'seo_description' => ['nullable', 'string'],
         ];
