@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Category;
 use App\Models\User;
+use App\Services\CartService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Cache;
@@ -57,6 +58,12 @@ class AppServiceProvider extends ServiceProvider
                     ])
                     ->all()),
             ));
+        });
+
+        // হেডারের লাইভ কার্ট-কাউন্ট — guest(session)/auth(user) উভয়ের জন্য
+        View::composer(['components.navbar'], function ($view): void {
+            $view->with('cartCount', app(CartService::class)
+                ->getItemCount(auth()->user(), session()->getId()));
         });
     }
 }

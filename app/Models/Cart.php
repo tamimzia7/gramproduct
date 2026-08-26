@@ -14,6 +14,7 @@ class Cart extends Model
     protected $fillable = [
         'user_id',
         'session_id',
+        'currency',
     ];
 
     protected $casts = [
@@ -30,13 +31,19 @@ class Cart extends Model
         return $this->hasMany(CartItem::class);
     }
 
+    /**
+     * সাবটোটাল — সব item-এর line_total এর যোগফল
+     */
     public function getSubtotalAttribute(): float
     {
-        return $this->items->sum(fn (CartItem $item) => $item->line_total);
+        return round($this->items->sum(fn (CartItem $item) => $item->line_total), 2);
     }
 
+    /**
+     * মোট পরিমাণ (quantity সমষ্টি)
+     */
     public function getItemCountAttribute(): int
     {
-        return $this->items->sum('quantity');
+        return (int) $this->items->sum('quantity');
     }
 }

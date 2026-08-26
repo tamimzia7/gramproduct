@@ -107,11 +107,21 @@
                 @endphp
                 <button type="button"
                         class="btn btn-success btn-sm flex-grow-1 add-to-cart-btn"
+                        data-add-to-cart="{{ route('cart.store') }}"
                         data-product-id="{{ $product->id }}"
                         data-variant-id="{{ $displayVariant?->id }}"
                         {{ ! $purchasable ? 'disabled' : '' }}
-                        title="{{ $purchasable ? '' : __('product.stock.out_of_stock') }}">
+                        title="{{ $purchasable ? '' : __('inventory.statuses.out_of_stock') }}">
                     <i class="bi bi-cart-plus me-1"></i>{{ __('product.common.add_to_cart') }}
+                </button>
+                <button type="button"
+                        class="btn btn-outline-secondary btn-sm wishlist-heart"
+                        data-wishlist-toggle
+                        data-product-id="{{ $product->id }}"
+                        data-saved="0"
+                        title="{{ __('cart.wishlist.add') }}"
+                        aria-label="{{ __('cart.wishlist.add') }}">
+                    <i class="bi bi-heart"></i>
                 </button>
                 <a href="{{ route('products.show', $product) }}" class="btn btn-outline-secondary btn-sm">
                     {{ __('product.common.view_details') }}

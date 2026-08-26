@@ -12,7 +12,6 @@ class CartItem extends Model
 
     protected $fillable = [
         'cart_id',
-        'product_id',
         'product_variant_id',
         'quantity',
         'unit_price',
@@ -20,7 +19,6 @@ class CartItem extends Model
 
     protected $casts = [
         'cart_id' => 'integer',
-        'product_id' => 'integer',
         'product_variant_id' => 'integer',
         'quantity' => 'integer',
         'unit_price' => 'decimal:2',
@@ -31,11 +29,9 @@ class CartItem extends Model
         return $this->belongsTo(Cart::class);
     }
 
-    public function product(): BelongsTo
-    {
-        return $this->belongsTo(Product::class);
-    }
-
+    /**
+     * কেনার একক — ভ্যারিয়েন্ট; পণ্য variant->product দিয়েই পাওয়া যায়
+     */
     public function variant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
@@ -43,6 +39,6 @@ class CartItem extends Model
 
     public function getLineTotalAttribute(): float
     {
-        return $this->quantity * (float) $this->unit_price;
+        return round($this->quantity * (float) $this->unit_price, 2);
     }
 }

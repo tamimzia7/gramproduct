@@ -12,6 +12,10 @@
     {{-- অ্যাপ্লিকেশন আইকন (ফেভিকন) --}}
     <link rel="icon" type="image/png" href="{{ asset('images/icon.png') }}">
 
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    @stack('head')
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>

@@ -2,33 +2,37 @@
     :title="__('home.meta.title')"
     :meta-description="__('home.meta.description')">
 
-    {{-- ============================== Hero ============================== --}}
-    <section class="bg-success-subtle py-5">
-        <div class="container">
-            <div class="row align-items-center g-4">
-                <div class="col-lg-7">
-                    <h1 class="display-5 fw-bold text-success-emphasis">
-                        {{ __('home.hero.title') }}
-                    </h1>
-                    <p class="lead mt-3 mb-4">
-                        {{ __('home.hero.subtitle') }}
-                    </p>
-                    <div class="d-flex flex-wrap gap-2">
-                        <a href="{{ route('products.index') }}" class="btn btn-success btn-lg px-4">
-                            <i class="bi bi-basket2 me-2"></i>{{ __('home.hero.cta_primary') }}
-                        </a>
-                        <a href="{{ route('categories.index') }}" class="btn btn-outline-success btn-lg px-4">
-                            {{ __('home.hero.cta_secondary') }}
-                        </a>
-                    </div>
-                </div>
-                <div class="col-lg-5 text-center">
-                    <img src="{{ asset('images/logo.png') }}"
-                         alt="{{ config('app.name', 'Gram Product') }} লোগো"
-                         class="img-fluid rounded-3 shadow-sm bg-white p-3"
-                         style="max-height: 240px; width: auto;"
-                         width="240" height="240">
-                </div>
+    @push('head')
+        {{-- Hero-র প্রধান ছবি above-the-fold — lazy load নয়, eager preload --}}
+        <link rel="preload" as="image" href="{{ asset('images/b-image1.jpg') }}" fetchpriority="high">
+    @endpush
+
+    {{-- ============================== Hero ==============================
+         তিনটি বিদ্যমান গ্রামীণ ছবির blended background composition:
+         b-image1 (কৃষক/ধানক্ষেত — বামে) · b-image2 (বিল/মাছ — ডানে)
+         b-image3 (ধানক্ষেত landscape — ভিত্তি/গভীরতা) --}}
+    <section class="hero-scene">
+        <div class="hero-bg" aria-hidden="true">
+            <div class="hero-bg__base"></div>
+            <div class="hero-bg__left"></div>
+            <div class="hero-bg__right"></div>
+        </div>
+
+        {{-- প্যানেল — hero-র গাণিতিক কেন্দ্রে (flex center) --}}
+        <div class="hero-text-panel text-center">
+            <h1 class="hero-heading fw-bold text-success-emphasis mb-3">
+                {{ __('home.hero.title') }}
+            </h1>
+            <p class="lead mb-4">
+                {{ __('home.hero.subtitle') }}
+            </p>
+            <div class="hero-actions">
+                <a href="{{ route('products.index') }}" class="btn btn-success btn-lg px-4">
+                    <i class="bi bi-basket2 me-2"></i>{{ __('home.hero.cta_primary') }}
+                </a>
+                <a href="{{ route('categories.index') }}" class="btn btn-outline-success btn-lg px-4 bg-white bg-opacity-75">
+                    {{ __('home.hero.cta_secondary') }}
+                </a>
             </div>
         </div>
     </section>

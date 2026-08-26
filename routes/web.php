@@ -11,6 +11,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
@@ -35,6 +36,16 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', LogoutController::class)->name('logout')->middleware('auth');
 
+// ---------- ইচ্ছেতালিকা ----------
+// store/destroyByProduct বাইরে — guest-ও কল করতে পারে; controller 401 + বাংলা নির্দেশনা দেয়
+Route::post('/wishlist', [WishlistController::class, 'store'])->name('wishlist.store');
+Route::delete('/wishlist/products/{product}', [WishlistController::class, 'destroyByProduct'])
+    ->name('wishlist.destroy-by-product');
+
+// ---------- কার্ট (guest + auth উভয়ের জন্য) ----------
+Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
+
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [HomeController::class, 'dashboard'])->name('dashboard');
 
@@ -49,12 +60,15 @@ Route::middleware('auth')->group(function () {
         ->name('verification.send')
         ->middleware('throttle:6,1');
 
-    Route::prefix('wishlist')->name('wishlist.')->group(function () {
-        Route::get('/', [WishlistController::class, 'index'])->name('index');
-        Route::post('/', [WishlistController::class, 'store'])->name('store');
-        Route::delete('/{wishlistItem}', [WishlistController::class, 'destroy'])->name('destroy');
-        Route::post('/{wishlistItem}/move-to-cart', [WishlistController::class, 'moveToCart'])->name('move-to-cart');
-    });
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::delete('/wishlist/{wishlistItem}', [WishlistController::class, 'destroy'])->name('wishlist.destroy');
+    Route::post('/wishlist/{wishlistItem}/move-to-cart', [WishlistController::class, 'moveToCart'])
+        ->name('wishlist.move-to-cart');
+
+    // নিজের cart item পরিবর্তন — ownership controller-এ যাচাই হয়
+    Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->name('cart.update');
+    Route::delete('/cart/{cartItem}', [CartController::class, 'destroy'])->name('cart.destroy');
+    Route::delete('/cart', [CartController::class, 'clear'])->name('cart.clear');
 });
 
 Route::middleware(['auth', 'can:admin.access'])->prefix('admin')->name('admin.')->group(function () {

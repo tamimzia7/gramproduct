@@ -40,12 +40,19 @@
             </form>
 
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
-                {{-- কার্ট ইন্টিগ্রেশন পয়েন্ট — কার্ট মডিউল আসার আগে placeholder; কোনো ভুয়া সংখ্যা নয় --}}
+                {{-- লাইভ কার্ট কাউন্ট — guest/auth উভয়ের জন্য --}}
                 <li class="nav-item">
-                    <span class="nav-link d-flex align-items-center gap-1 text-white-50"
-                          title="{{ __('home.cart.coming_soon') }}" aria-label="{{ __('home.cart.label') }}">
-                        <i class="bi bi-cart2 fs-5"></i><small>{{ __('home.cart.label') }}</small>
-                    </span>
+                    <a class="nav-link d-flex align-items-center gap-1 {{ request()->routeIs('cart.index') ? 'active fw-semibold' : '' }}"
+                       href="{{ route('cart.index') }}" aria-label="{{ __('cart.cart.title') }}">
+                        <span class="position-relative">
+                            <i class="bi bi-cart2 fs-5"></i>
+                            @if ($cartCount > 0)
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-count-badge"
+                                      style="font-size:0.6rem;">{{ \App\Support\BengaliNumber::format($cartCount) }}</span>
+                            @endif
+                        </span>
+                        <small class="d-lg-none">{{ __('cart.cart.title') }}</small>
+                    </a>
                 </li>
                 @auth
                     @php

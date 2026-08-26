@@ -24,3 +24,188 @@ main {
     transform: translateY(-3px);
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
 }
+
+/* ==========================================================================
+   Hero — তিনটি গ্রামীণ ছবির একটি অবিচ্ছিন্ন landscape composition
+   স্তর: b-image3 (ভিত্তি/গভীরতা) ← b-image1 (কৃষক/ধানক্ষেত, বামে)
+        ← b-image2 (বিল/মাছ, ডানে)
+   টেক্সট প্যানেল hero-র গাণিতিক কেন্দ্রে (flex center, কোনো hard-coded
+   margin/left offset নয়)। Mask-এর solid core বড় রাখা হয়েছে যাতে
+   স্তরগুলোর মধ্যে ghosting/duplicate-figure না দেখা যায় — fade শুধু
+   কেন্দ্রের seam-এ (প্যানেলের নিচে) ঘটে।
+   ছবিগুলো public/images/ থেকে সরাসরি আসছে (নতুন কোনো ফাইল নয়)।
+   ========================================================================== */
+
+.hero-scene {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: 560px;
+    display: flex;
+    align-items: center;      /* vertical center */
+    justify-content: center;  /* horizontal center */
+    padding: 2.5rem 1rem;
+    background-color: #eef4ea; /* ছবি লোড হওয়া পর্যন্ত natural fallback */
+}
+
+.hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+}
+
+/* ভিত্তি স্তর — b-image3: ধানক্ষেতের landscape গভীরতা (নিচের দিকে focus,
+   উপরের অংশ wash-এ মিশে distant-field হিসেবে থাকে — পৃথক মানুষ/figure
+   চোখে পড়ে না) */
+.hero-bg__base {
+    position: absolute;
+    inset: 0;
+    background-image: url('/images/b-image3.jpg');
+    background-size: cover;
+    background-position: center 78%;
+}
+
+.hero-bg__base::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(to right,
+            rgba(246, 250, 243, 0.96) 0%,
+            rgba(246, 250, 243, 0.88) 30%,
+            rgba(246, 250, 243, 0.55) 46%,
+            rgba(246, 250, 243, 0.18) 58%,
+            rgba(246, 250, 243, 0.45) 72%,
+            rgba(246, 250, 243, 0.85) 100%),
+        linear-gradient(to top, rgba(238, 244, 234, 0.92) 0%, rgba(238, 244, 234, 0) 26%);
+}
+
+/* বাম স্তর — b-image1: কৃষক ও ধান কাটা। Solid core বড় → farmer zone-এ
+   নিচের স্তর চোখে পড়ে না; fade শুধু কেন্দ্র-seam-এ। */
+.hero-bg__left {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 56%;
+    background-image: url('/images/b-image1.jpg');
+    background-size: cover;
+    background-position: left center;
+    -webkit-mask-image: radial-gradient(125% 145% at 10% 50%, #000 55%, transparent 86%);
+    mask-image: radial-gradient(125% 145% at 10% 50%, #000 55%, transparent 86%);
+}
+
+/* ডান স্তর — b-image2: গ্রামের বিল/ঝিল ও মাছ */
+.hero-bg__right {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 42%;
+    background-image: url('/images/b-image2.jpg');
+    background-size: cover;
+    background-position: center 55%;
+    -webkit-mask-image: radial-gradient(120% 140% at 90% 50%, #000 52%, transparent 84%);
+    mask-image: radial-gradient(120% 140% at 90% 50%, #000 52%, transparent 84%);
+}
+
+/* টেক্সট প্যানেল — hero-র একদম কেন্দ্রে; translucent white + blur */
+.hero-text-panel {
+    width: min(100%, 620px);
+    padding: 48px;
+    border-radius: 24px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 1.25rem 3rem rgba(23, 58, 28, 0.16), 0 0.25rem 0.75rem rgba(23, 58, 28, 0.06);
+}
+
+.hero-text-panel .lead {
+    color: #33463a;
+}
+
+/* হেডিং স্কেল — clamp দিয়ে responsive (desktop ~52px → mobile ~31px) */
+.hero-heading {
+    font-size: clamp(1.9rem, 1.05rem + 2.9vw, 3.25rem);
+    line-height: 1.25;
+}
+
+/* বাটন সারি — কেন্দ্রস্থিত */
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+}
+
+/* ---------- Tablet ---------- */
+@media (max-width: 991.98px) {
+    .hero-scene {
+        min-height: 500px;
+        padding: 2rem 1rem;
+    }
+
+    .hero-bg__left {
+        width: 62%;
+        background-position: 22% center;
+        -webkit-mask-image: radial-gradient(130% 140% at 8% 50%, #000 50%, transparent 84%);
+        mask-image: radial-gradient(130% 140% at 8% 50%, #000 50%, transparent 84%);
+    }
+
+    .hero-bg__right {
+        width: 48%;
+        opacity: 0.9;
+        background-position: center 60%;
+    }
+
+    .hero-text-panel {
+        padding: 40px 36px;
+    }
+}
+
+/* ---------- Mobile — desktop shrink নয়, নিজস্ব composition ---------- */
+@media (max-width: 575.98px) {
+    .hero-scene {
+        min-height: 600px;
+        padding: 5rem 1rem 2.5rem;
+    }
+
+    /* কৃষক/ধানক্ষেত প্রাধান্য — subject উপরের দিকে রেখে face crop এড়ানো */
+    .hero-bg__left {
+        width: 100%;
+        background-position: 26% top;
+        -webkit-mask-image: radial-gradient(150% 115% at 28% 32%, #000 55%, transparent 92%);
+        mask-image: radial-gradient(150% 115% at 28% 32%, #000 55%, transparent 92%);
+    }
+
+    /* বিল/মাছ — নিচের ডান কোণে মৃদু উপস্থিতি */
+    .hero-bg__right {
+        top: auto;
+        height: 46%;
+        width: 74%;
+        bottom: -8%;
+        right: -12%;
+        opacity: 0.3;
+        -webkit-mask-image: radial-gradient(105% 105% at 82% 82%, #000 28%, transparent 76%);
+        mask-image: radial-gradient(105% 105% at 82% 82%, #000 28%, transparent 76%);
+    }
+
+    .hero-bg__base::after {
+        background:
+            linear-gradient(to top,
+                rgba(246, 250, 243, 0.97) 0%,
+                rgba(246, 250, 243, 0.88) 32%,
+                rgba(246, 250, 243, 0.35) 58%,
+                rgba(246, 250, 243, 0) 82%);
+    }
+
+    /* মোবাইলেও content vertically + horizontally centered */
+    .hero-text-panel {
+        width: min(100%, 480px);
+        padding: 32px 22px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.9);
+    }
+}

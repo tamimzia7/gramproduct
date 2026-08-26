@@ -16,7 +16,6 @@ class WishlistItemFactory extends Factory
         return [
             'user_id' => User::factory(),
             'product_id' => Product::factory(),
-            'product_variant_id' => null,
         ];
     }
 }

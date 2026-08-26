@@ -176,16 +176,21 @@
                         </div>
                     @endif
 
-                    {{-- অ্যাকশন — পরবর্তী ফেজে কার্টের সাথে সংযুক্ত হবে --}}
+                    {{-- অ্যাকশন — কার্ট/ইচ্ছেতালিকা ইন্টিগ্রেশন --}}
                     @php
                         $canBuy = $product->hasActiveVariants()
                             ? $displayVariant->isPurchasable()
                             : (! $hasVariants && $product->isInStock());
+                        $savedInWishlist = auth()->check() && \App\Models\WishlistItem::query()
+                            ->where('user_id', auth()->id())
+                            ->where('product_id', $product->id)
+                            ->exists();
                     @endphp
-                    <div class="d-flex flex-wrap gap-2 mb-4">
+                    <div class="d-flex flex-wrap gap-2 mb-4 align-items-center">
                         <button type="button"
                                 id="add-to-cart-btn"
                                 class="btn btn-success btn-lg add-to-cart-btn px-4"
+                                data-add-to-cart="{{ route('cart.store') }}"
                                 data-product-id="{{ $product->id }}"
                                 data-variant-id="{{ $displayVariant?->id }}"
                                 {{ ! $canBuy ? 'disabled' : '' }}>
@@ -194,8 +199,19 @@
                         <button type="button"
                                 id="buy-now-btn"
                                 class="btn btn-outline-success btn-lg px-4"
+                                title="{{ __('cart.cart.coming_soon') }}"
                                 {{ ! $canBuy ? 'disabled' : '' }}>
                             {{ __('product.common.buy_now') }}
+                        </button>
+                        <button type="button"
+                                id="wishlist-toggle-btn"
+                                class="btn {{ $savedInWishlist ? 'btn-danger' : 'btn-outline-danger' }} btn-lg"
+                                data-wishlist-toggle
+                                data-product-id="{{ $product->id }}"
+                                data-saved="{{ $savedInWishlist ? '1' : '0' }}"
+                                aria-label="{{ $savedInWishlist ? __('cart.wishlist.remove') : __('cart.wishlist.add') }}">
+                            <i class="bi {{ $savedInWishlist ? 'bi-heart-fill' : 'bi-heart' }} me-1"></i>
+                            <span>{{ $savedInWishlist ? __('cart.wishlist.remove') : __('cart.wishlist.add') }}</span>
                         </button>
                     </div>
 
@@ -305,7 +321,7 @@
                         var elOld = document.getElementById('selected-variant-old-price');
                         var elDiscount = document.getElementById('selected-variant-discount');
                         var elStock = document.getElementById('selected-variant-stock');
-                        var elQuantity = document.getElementById('selected-variant-quantity');
+                        var elQtyLabel = document.getElementById('selected-variant-quantity');
                         var elSku = document.getElementById('selected-variant-sku');
                         var addBtn = document.getElementById('add-to-cart-btn');
                         var buyBtn = document.getElementById('buy-now-btn');
@@ -347,7 +363,7 @@
                                 elStock.textContent = variant.stock_label;
                             }
 
-                            if (elQuantity) elQuantity.textContent = variant.quantity_label;
+                            if (elQtyLabel) elQtyLabel.textContent = variant.quantity_label;
                             if (elSku && variant.sku) elSku.textContent = variant.sku;
 
                             [addBtn, buyBtn].forEach(function (btn) {

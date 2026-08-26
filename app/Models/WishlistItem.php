@@ -13,13 +13,11 @@ class WishlistItem extends Model
     protected $fillable = [
         'user_id',
         'product_id',
-        'product_variant_id',
     ];
 
     protected $casts = [
         'user_id' => 'integer',
         'product_id' => 'integer',
-        'product_variant_id' => 'integer',
     ];
 
     public function user(): BelongsTo
@@ -27,13 +25,11 @@ class WishlistItem extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * ইচ্ছেতালিকা পণ্য-ভিত্তিক; কেনার ভ্যারিয়েন্ট কার্টেই ঠিক হয়
+     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function variant(): BelongsTo
-    {
-        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 }
