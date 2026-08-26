@@ -70,6 +70,21 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
+    /**
+     * কাস্টমার-ফেসিং সক্রিয় ভ্যারিয়েন্ট — প্রদর্শনের ক্রম অনুযায়ী
+     */
+    public function activeVariants(): HasMany
+    {
+        return $this->variants()->active()->ordered();
+    }
+
+    public function defaultVariant()
+    {
+        return $this->hasOne(ProductVariant::class)
+            ->where('is_default', true)
+            ->where('is_active', true);
+    }
+
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class)->orderBy('sort_order')->orderBy('id');
@@ -141,6 +156,29 @@ class Product extends Model
     public function isActive(): bool
     {
         return (bool) $this->is_active;
+    }
+
+    /**
+     * প্রদর্শনযোগ্য ভ্যারিয়েন্ট — ডিফল্ট, না থাকলে প্রথম সক্রিয় ভ্যারিয়েন্ট
+     *
+     * eager-loaded activeVariants থেকে কাজ করে; আলাদা কুয়েরি চালায় না।
+     */
+    public function displayVariant(): ?ProductVariant
+    {
+        if (! $this->relationLoaded('activeVariants')) {
+            $this->load('activeVariants');
+        }
+
+        return $this->activeVariants->firstWhere('is_default', true)
+            ?? $this->activeVariants->first();
+    }
+
+    /**
+     * পণ্যের অন্তত একটি সক্রিয় ভ্যারিয়েন্ট আছে কি না
+     */
+    public function hasActiveVariants(): bool
+    {
+        return $this->displayVariant() !== null;
     }
 
     public function isInStock(): bool

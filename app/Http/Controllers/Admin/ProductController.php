@@ -113,7 +113,11 @@ class ProductController extends Controller
     {
         $this->authorize('view', $product);
 
-        $product->load(['category.parent', 'images', 'variants']);
+        $product->load([
+            'category.parent',
+            'images',
+            'variants' => fn ($query) => $query->ordered(),
+        ]);
 
         return view('admin.products.show', compact('product'));
     }

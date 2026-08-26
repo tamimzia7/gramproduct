@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\InventoryController as AdminInventoryController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductImageController as AdminProductImageController;
+use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
@@ -67,6 +69,28 @@ Route::middleware(['auth', 'can:admin.access'])->prefix('admin')->name('admin.')
         ->name('products.images.primary');
     Route::delete('products/{product}/images/{image}', [AdminProductImageController::class, 'destroy'])
         ->name('products.images.destroy');
+
+    Route::get('products/{product}/variants/create', [AdminProductVariantController::class, 'create'])
+        ->name('products.variants.create');
+    Route::post('products/{product}/variants', [AdminProductVariantController::class, 'store'])
+        ->name('products.variants.store');
+    Route::get('products/{product}/variants/{variant}/edit', [AdminProductVariantController::class, 'edit'])
+        ->name('products.variants.edit');
+    Route::put('products/{product}/variants/{variant}', [AdminProductVariantController::class, 'update'])
+        ->name('products.variants.update');
+    Route::delete('products/{product}/variants/{variant}', [AdminProductVariantController::class, 'destroy'])
+        ->name('products.variants.destroy');
+    Route::patch('products/{product}/variants/{variant}/default', [AdminProductVariantController::class, 'setDefault'])
+        ->name('products.variants.default');
+    Route::patch('products/{product}/variants/{variant}/toggle-active', [AdminProductVariantController::class, 'toggleActive'])
+        ->name('products.variants.toggle-active');
+
+    Route::get('inventory', [AdminInventoryController::class, 'index'])->name('inventory.index');
+    Route::get('inventory/{inventory}', [AdminInventoryController::class, 'show'])->name('inventory.show');
+    Route::get('inventory/{inventory}/add', [AdminInventoryController::class, 'addForm'])->name('inventory.add-form');
+    Route::post('inventory/{inventory}/add', [AdminInventoryController::class, 'add'])->name('inventory.add');
+    Route::get('inventory/{inventory}/adjust', [AdminInventoryController::class, 'adjustForm'])->name('inventory.adjust-form');
+    Route::post('inventory/{inventory}/adjust', [AdminInventoryController::class, 'adjust'])->name('inventory.adjust');
 });
 
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');

@@ -1,7 +1,11 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-success sticky-top shadow-sm">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="{{ route('home') }}">
-            {{ config('app.name', 'Gram Product') }}
+        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{{ route('home') }}">
+            <img src="{{ asset('images/logo.png') }}"
+                 alt="{{ config('app.name', 'Gram Product') }} লোগো"
+                 class="d-inline-block"
+                 style="height: 34px; width: auto; object-fit: contain;">
+            <span>{{ config('app.name', 'Gram Product') }}</span>
         </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"

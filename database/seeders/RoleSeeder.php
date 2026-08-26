@@ -24,6 +24,17 @@ class RoleSeeder extends Seeder
         'products.create',
         'products.edit',
         'products.delete',
+        // ভ্যারিয়েন্ট মডিউলের granular permission (ProductVariantPolicy ব্যবহার করে)
+        'products.variants.view',
+        'products.variants.create',
+        'products.variants.edit',
+        'products.variants.delete',
+        // ইনভেন্টরি মডিউলের granular permission (InventoryPolicy ব্যবহার করে)
+        'inventory.view',
+        'inventory.create',
+        'inventory.adjust',
+        'inventory.delete',
+        'inventory.history.view',
     ];
 
     public function run(): void
@@ -53,6 +64,10 @@ class RoleSeeder extends Seeder
                     'products.create',
                     'products.edit',
                     'products.delete',
+                    'products.variants.view',
+                    'products.variants.create',
+                    'products.variants.edit',
+                    'products.variants.delete',
                 ],
                 'is_system' => true,
             ],
@@ -65,7 +80,16 @@ class RoleSeeder extends Seeder
             'inventory-manager' => [
                 'name' => 'Inventory Manager',
                 'description' => 'Manages stock and inventory.',
-                'permissions' => ['view-dashboard', 'manage-inventory', 'view-reports'],
+                'permissions' => [
+                    'view-dashboard',
+                    'manage-inventory',
+                    'view-reports',
+                    'inventory.view',
+                    'inventory.create',
+                    'inventory.adjust',
+                    'inventory.delete',
+                    'inventory.history.view',
+                ],
                 'is_system' => true,
             ],
             'content-manager' => [

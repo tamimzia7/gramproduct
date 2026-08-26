@@ -71,44 +71,129 @@
                         <p class="text-muted">{{ $product->short_description }}</p>
                     @endif
 
+                    @php
+                        $displayVariant = $product->displayVariant();
+                        $hasVariants = $product->variants()->exists();
+                        // প্রতিটি ভ্যারিয়েন্টের স্টক-স্টেট server-এই নির্ণীত — JS-এ নতুন রিকুয়েস্ট লাগে না
+                        $variantData = $product->activeVariants->map(fn ($v) => [
+                            'id' => $v->id,
+                            'name' => $v->name,
+                            'sku' => $v->sku,
+                            'price' => \App\Support\BengaliNumber::money($v->price),
+                            'old_price' => $v->oldPrice() ? \App\Support\BengaliNumber::money($v->oldPrice()) : null,
+                            'discount_percent' => $v->discountPercent(),
+                            'stock_label' => $v->stockLabel(),
+                            'stock_state' => $v->stock_status === \App\Enums\StockStatus::PRE_ORDER ? 'pre_order'
+                                : ($v->isOutOfStock() ? 'out_of_stock' : ($v->isLowStock() ? 'low_stock' : 'in_stock')),
+                            'in_stock' => $v->isInStock(),
+                            'purchasable' => $v->isPurchasable(),
+                            'quantity_label' => $v->quantityLabel(),
+                        ])->values()->all();
+                    @endphp
+
+                    {{-- ভ্যারিয়েন্ট নির্বাচন --}}
+                    @if ($product->hasActiveVariants())
+                        <div class="my-3">
+                            <p class="fw-semibold mb-2">{{ __('product.variant.select_variant') }}</p>
+                            <div class="d-flex flex-wrap gap-2" id="variant-selector" role="radiogroup"
+                                 aria-label="{{ __('product.variant.select_variant') }}">
+                                @foreach ($product->activeVariants as $variant)
+                                    <input type="radio"
+                                           class="btn-check variant-radio"
+                                           name="variant_option"
+                                           id="variant-option-{{ $variant->id }}"
+                                           autocomplete="off"
+                                           data-variant-id="{{ $variant->id }}"
+                                           aria-label="{{ $variant->quantityLabel() }}"
+                                           @checked($variant->is($displayVariant))>
+                                    <label class="btn btn-outline-success px-3" for="variant-option-{{ $variant->id }}">
+                                        {{ $variant->name }}
+                                        @if ($variant->isOutOfStock())
+                                            <small class="d-block text-danger fw-normal">({{ __('inventory.statuses.out_of_stock') }})</small>
+                                        @elseif ($variant->isLowStock())
+                                            <small class="d-block text-warning-emphasis fw-normal">({{ __('inventory.statuses.low_stock_left', ['count' => \App\Support\BengaliNumber::format($variant->availableQuantity())]) }})</small>
+                                        @endif
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- মূল্য --}}
                     <div class="my-3 d-flex align-items-center gap-2 flex-wrap">
                         <span class="text-muted small fw-semibold">{{ __('product.common.price') }}:</span>
-                        <span class="fw-bold text-success fs-3">
-                            @price($product->effectivePrice(), $product->unitLabel())
-                        </span>
-                        @if ($old = $product->oldPrice())
-                            <span class="text-muted text-decoration-line-through fs-5">
-                                {{ \App\Support\BengaliNumber::money($old) }}
+                        @if ($product->hasActiveVariants())
+                            <span class="fw-bold text-success fs-3" id="selected-variant-price">
+                                {{ \App\Support\BengaliNumber::money($displayVariant->price) }}
                             </span>
-                            <span class="badge text-bg-danger">
-                                {{ \App\Support\BengaliNumber::format($product->discountPercent()) }}% {{ __('product.common.discount') }}
+                            <span class="text-muted text-decoration-line-through fs-5 d-none" id="selected-variant-old-price"></span>
+                            <span class="badge text-bg-danger d-none" id="selected-variant-discount"></span>
+                        @else
+                            <span class="fw-bold text-success fs-3">
+                                @price($product->effectivePrice(), $product->unitLabel())
                             </span>
+                            @if ($old = $product->oldPrice())
+                                <span class="text-muted text-decoration-line-through fs-5">
+                                    {{ \App\Support\BengaliNumber::money($old) }}
+                                </span>
+                                <span class="badge text-bg-danger">
+                                    {{ \App\Support\BengaliNumber::format($product->discountPercent()) }}% {{ __('product.common.discount') }}
+                                </span>
+                            @endif
                         @endif
                     </div>
 
                     {{-- স্টক স্ট্যাটাস --}}
                     <p class="mb-3">
-                        @if ($product->isInStock())
-                            <span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>{{ __('product.stock.in_stock') }}</span>
-                        @else
-                            <span class="badge text-bg-secondary"><i class="bi bi-x-circle me-1"></i>{{ __('product.stock.out_of_stock') }}</span>
+                        @if ($product->hasActiveVariants())
+                            @php
+                                $initialState = $displayVariant->stock_status === \App\Enums\StockStatus::PRE_ORDER ? 'pre_order'
+                                    : ($displayVariant->isOutOfStock() ? 'out_of_stock' : ($displayVariant->isLowStock() ? 'low_stock' : 'in_stock'));
+                                $stockBadgeClasses = [
+                                    'in_stock' => 'text-bg-success',
+                                    'low_stock' => 'text-bg-warning text-dark',
+                                    'out_of_stock' => 'text-bg-secondary',
+                                    'pre_order' => 'text-bg-warning text-dark',
+                                ];
+                            @endphp
+                            <span class="badge {{ $stockBadgeClasses[$initialState] }}" id="selected-variant-stock">
+                                {{ $displayVariant->stockLabel() }}
+                            </span>
+                        @elseif (! $hasVariants)
+                            @if ($product->isInStock())
+                                <span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>{{ __('product.stock.in_stock') }}</span>
+                            @else
+                                <span class="badge text-bg-secondary"><i class="bi bi-x-circle me-1"></i>{{ __('product.stock.out_of_stock') }}</span>
+                            @endif
                         @endif
                     </p>
 
+                    {{-- পণ্যটির কোনো সক্রিয় ভ্যারিয়েন্ট নেই — অসুপলব্ধ অবস্থা --}}
+                    @if ($hasVariants && ! $product->hasActiveVariants())
+                        <div class="alert alert-secondary">
+                            <i class="bi bi-info-circle me-1"></i>{{ __('product.variant.unavailable') }}
+                        </div>
+                    @endif
+
                     {{-- অ্যাকশন — পরবর্তী ফেজে কার্টের সাথে সংযুক্ত হবে --}}
+                    @php
+                        $canBuy = $product->hasActiveVariants()
+                            ? $displayVariant->isPurchasable()
+                            : (! $hasVariants && $product->isInStock());
+                    @endphp
                     <div class="d-flex flex-wrap gap-2 mb-4">
                         <button type="button"
                                 id="add-to-cart-btn"
                                 class="btn btn-success btn-lg add-to-cart-btn px-4"
                                 data-product-id="{{ $product->id }}"
-                                {{ ! $product->isInStock() ? 'disabled' : '' }}>
+                                data-variant-id="{{ $displayVariant?->id }}"
+                                {{ ! $canBuy ? 'disabled' : '' }}>
                             <i class="bi bi-cart-plus me-2"></i>{{ __('product.common.add_to_cart') }}
                         </button>
                         <button type="button"
                                 id="buy-now-btn"
                                 class="btn btn-outline-success btn-lg px-4"
-                                {{ ! $product->isInStock() ? 'disabled' : '' }}>
+                                {{ ! $canBuy ? 'disabled' : '' }}>
                             {{ __('product.common.buy_now') }}
                         </button>
                     </div>
@@ -121,17 +206,28 @@
                                 {{ $product->category?->name }}
                             </a>
                         </li>
-                        @if ($product->unit)
+                        @if ($product->hasActiveVariants())
                             <li class="list-group-item d-flex justify-content-between">
                                 <span class="text-muted">{{ __('product.common.unit') }}</span>
-                                <span>{{ $product->unitLabel() }}</span>
+                                <span id="selected-variant-quantity">{{ $displayVariant->quantityLabel() }}</span>
                             </li>
-                        @endif
-                        @if ($product->sku)
                             <li class="list-group-item d-flex justify-content-between">
-                                <span class="text-muted">{{ __('product.common.code') }}</span>
-                                <code>{{ $product->sku }}</code>
+                                <span class="text-muted">SKU</span>
+                                <code id="selected-variant-sku">{{ $displayVariant->sku }}</code>
                             </li>
+                        @else
+                            @if ($product->unit)
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span class="text-muted">{{ __('product.common.unit') }}</span>
+                                    <span>{{ $product->unitLabel() }}</span>
+                                </li>
+                            @endif
+                            @if ($product->sku)
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span class="text-muted">{{ __('product.common.code') }}</span>
+                                    <code>{{ $product->sku }}</code>
+                                </li>
+                            @endif
                         @endif
                         @if ($product->origin)
                             <li class="list-group-item d-flex justify-content-between">
@@ -177,5 +273,87 @@
                 });
             </script>
         @endonce
+
+        @if ($product->hasActiveVariants())
+            <script type="application/json" id="variant-payload">{!! json_encode($variantData, JSON_UNESCAPED_UNICODE) !!}</script>
+            @once
+                <script>
+                    // ভ্যারিয়েন্ট নির্বাচন — server-এ প্রি-ফরম্যাট করা ডেটা; নতুন কোনো রিকুয়েস্ট হয় না
+                    (function () {
+                        var payloadEl = document.getElementById('variant-payload');
+                        if (! payloadEl) return;
+
+                        var variants = {};
+                        try {
+                            JSON.parse(payloadEl.textContent).forEach(function (v) { variants[v.id] = v; });
+                        } catch (e) {
+                            return;
+                        }
+
+                        var elPrice = document.getElementById('selected-variant-price');
+                        var elOld = document.getElementById('selected-variant-old-price');
+                        var elDiscount = document.getElementById('selected-variant-discount');
+                        var elStock = document.getElementById('selected-variant-stock');
+                        var elQuantity = document.getElementById('selected-variant-quantity');
+                        var elSku = document.getElementById('selected-variant-sku');
+                        var addBtn = document.getElementById('add-to-cart-btn');
+                        var buyBtn = document.getElementById('buy-now-btn');
+
+                        function apply(variant) {
+                            if (! variant) return;
+
+                            if (elPrice) elPrice.textContent = variant.price;
+
+                            if (elOld) {
+                                if (variant.old_price) {
+                                    elOld.textContent = variant.old_price;
+                                    elOld.classList.remove('d-none');
+                                } else {
+                                    elOld.textContent = '';
+                                    elOld.classList.add('d-none');
+                                }
+                            }
+
+                            if (elDiscount) {
+                                if (variant.discount_percent > 0) {
+                                    elDiscount.textContent = variant.discount_percent + '% {{ __('product.common.discount') }}';
+                                    elDiscount.classList.remove('d-none');
+                                } else {
+                                    elDiscount.textContent = '';
+                                    elDiscount.classList.add('d-none');
+                                }
+                            }
+
+                            if (elStock) {
+                                var badgeClasses = {
+                                    in_stock: 'text-bg-success',
+                                    low_stock: 'text-bg-warning text-dark',
+                                    out_of_stock: 'text-bg-secondary',
+                                    pre_order: 'text-bg-warning text-dark'
+                                };
+                                elStock.className = 'badge';
+                                elStock.classList.add(badgeClasses[variant.stock_state] || 'text-bg-secondary');
+                                elStock.textContent = variant.stock_label;
+                            }
+
+                            if (elQuantity) elQuantity.textContent = variant.quantity_label;
+                            if (elSku && variant.sku) elSku.textContent = variant.sku;
+
+                            [addBtn, buyBtn].forEach(function (btn) {
+                                if (btn) btn.disabled = ! variant.purchasable;
+                            });
+
+                            if (addBtn) addBtn.dataset.variantId = variant.id;
+                        }
+
+                        document.querySelectorAll('.variant-radio').forEach(function (radio) {
+                            radio.addEventListener('change', function () {
+                                if (this.checked) apply(variants[this.dataset.variantId]);
+                            });
+                        });
+                    })();
+                </script>
+            @endonce
+        @endif
     @endpush
 </x-layouts.app>

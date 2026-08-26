@@ -135,6 +135,112 @@
                 </div>
             </div>
 
+            {{-- ভ্যারিয়েন্টসমূহ --}}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h2 class="h6 mb-0">{{ __('product.variant.list_title') }} ({{ \App\Support\BengaliNumber::format($product->variants->count()) }})</h2>
+                    @can('create', \App\Models\ProductVariant::class)
+                        <a href="{{ route('admin.products.variants.create', $product) }}" class="btn btn-success btn-sm">
+                            <i class="bi bi-plus-lg me-1"></i>{{ __('product.variant.add') }}
+                        </a>
+                    @endcan
+                </div>
+                <div class="card-body">
+                    @if ($product->variants->isEmpty())
+                        <p class="text-muted small mb-0">{{ __('product.variant.no_variants') }} {{ __('product.variant.empty_hint') }}</p>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr class="small text-muted">
+                                        <th>{{ __('product.variant.name') }}</th>
+                                        <th>{{ __('product.variant.sku') }}</th>
+                                        <th>{{ __('product.variant.quantity') }}</th>
+                                        <th>{{ __('product.variant.price') }}</th>
+                                        <th>{{ __('product.variant.status') }}</th>
+                                        <th style="width: 220px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($product->variants as $variant)
+                                        @php
+                                            $stockLabel = __('product.stock.'.$variant->stock_status->value);
+                                        @endphp
+                                        <tr class="{{ $variant->isActive() ? '' : 'text-muted' }}">
+                                            <td>
+                                                <span class="fw-semibold">{{ $variant->name }}</span>
+                                                @if ($variant->isDefault() && $variant->isActive())
+                                                    <span class="badge text-bg-success ms-1">{{ __('product.variant.default_badge') }}</span>
+                                                @endif
+                                                @unless ($variant->isActive())
+                                                    <span class="badge text-bg-secondary ms-1">{{ __('product.variant.inactive') }}</span>
+                                                @endunless
+                                            </td>
+                                            <td><code>{{ $variant->sku }}</code></td>
+                                            <td>{{ $variant->quantityLabel() }}</td>
+                                            <td>
+                                                @if ($variant->oldPrice())
+                                                    <span class="text-muted text-decoration-line-through small me-1">
+                                                        {{ \App\Support\BengaliNumber::money($variant->oldPrice()) }}
+                                                    </span>
+                                                @endif
+                                                <span class="fw-semibold">{{ \App\Support\BengaliNumber::money($variant->price) }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge {{ $variant->isInStock() ? 'text-bg-success' : ($variant->stock_status === \App\Enums\StockStatus::PRE_ORDER ? 'text-bg-warning text-dark' : 'text-bg-secondary') }}">
+                                                    {{ $stockLabel }}
+                                                </span>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="d-inline-flex flex-wrap gap-1 justify-content-end">
+                                                    @can('update', $variant)
+                                                        @unless ($variant->isDefault() && $variant->isActive())
+                                                            <form method="POST" action="{{ route('admin.products.variants.default', [$product, $variant]) }}">
+                                                                @csrf
+                                                                @method('PATCH')
+                                                                <button type="submit" class="btn btn-outline-success btn-sm"
+                                                                        title="{{ __('product.variant.set_default') }}">
+                                                                    {{ __('product.variant.set_default') }}
+                                                                </button>
+                                                            </form>
+                                                        @endunless
+                                                        <form method="POST" action="{{ route('admin.products.variants.toggle-active', [$product, $variant]) }}">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <button type="submit" class="btn btn-outline-secondary btn-sm">
+                                                                {{ $variant->isActive() ? __('product.variant.deactivate') : __('product.variant.activate') }}
+                                                            </button>
+                                                        </form>
+                                                    @endcan
+                                                    @can('update', $variant)
+                                                        <a href="{{ route('admin.products.variants.edit', [$product, $variant]) }}"
+                                                           class="btn btn-outline-primary btn-sm"
+                                                           title="{{ __('product.variant.edit') }}">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                    @endcan
+                                                    @can('delete', $variant)
+                                                        <form method="POST"
+                                                              action="{{ route('admin.products.variants.destroy', [$product, $variant]) }}"
+                                                              onsubmit="return confirm('{{ __('product.variant.delete_confirm') }}')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="মুছে ফেলুন">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    @endcan
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
             {{-- বিবরণ --}}
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white"><h2 class="h6 mb-0">বিবরণ</h2></div>
@@ -175,27 +281,6 @@
                             <td>{{ $product->seasonal_info ?: '—' }}</td>
                         </tr>
                     </table>
-                </div>
-            </div>
-
-            {{-- ভ্যারিয়েন্ট --}}
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
-                    <h2 class="h6 mb-0">ভ্যারিয়েন্ট ({{ \App\Support\BengaliNumber::format($product->variants->count()) }})</h2>
-                </div>
-                <div class="card-body">
-                    @if ($product->variants->isEmpty())
-                        <p class="text-muted small mb-0">কোনো ভ্যারিয়েন্ট নেই। পরবর্তী ফেজে যোগ করা যাবে।</p>
-                    @else
-                        <ul class="list-unstyled mb-0 small">
-                            @foreach ($product->variants as $variant)
-                                <li class="d-flex justify-content-between mb-1">
-                                    <span>{{ $variant->name }}</span>
-                                    <span class="fw-semibold">{{ \App\Support\BengaliNumber::money($variant->hasDiscount() ? $variant->discount_price : $variant->price) }}</span>
-                                </li>
-                            @endforeach
-                        </ul>
-                    @endif
                 </div>
             </div>
         </div>

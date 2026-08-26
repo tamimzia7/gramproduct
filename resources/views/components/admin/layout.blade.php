@@ -21,6 +21,10 @@
                                href="{{ route('admin.products.index') }}">
                                 <i class="bi bi-box-seam me-2"></i>পণ্যসমূহ
                             </a>
+                            <a class="nav-link {{ request()->routeIs('admin.inventory.*') ? 'active text-success fw-semibold' : 'text-dark' }}"
+                               href="{{ route('admin.inventory.index') }}">
+                                <i class="bi bi-clipboard-data me-2"></i>ইনভেন্টরি
+                            </a>
                         </nav>
                     </div>
                 </div>
@@ -42,6 +46,10 @@
                         <a href="{{ route('admin.products.index') }}"
                            class="btn btn-sm {{ request()->routeIs('admin.products.*') ? 'btn-success' : 'btn-outline-secondary' }}">
                             <i class="bi bi-box-seam me-1"></i>পণ্য
+                        </a>
+                        <a href="{{ route('admin.inventory.index') }}"
+                           class="btn btn-sm {{ request()->routeIs('admin.inventory.*') ? 'btn-success' : 'btn-outline-secondary' }}">
+                            <i class="bi bi-clipboard-data me-1"></i>স্টক
                         </a>
                     </div>
                 </div>

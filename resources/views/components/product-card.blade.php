@@ -57,22 +57,59 @@
 
         <div class="mt-auto">
             <div class="mb-2">
-                @if ($old = $product->oldPrice())
-                    <span class="text-muted text-decoration-line-through small me-1">
-                        {{ \App\Support\BengaliNumber::money($old) }}
+                @php
+                    $displayVariant = $product->displayVariant();
+                    $activeCount = $product->activeVariants->count();
+                @endphp
+
+                @if ($displayVariant)
+                    @if ($displayVariant->oldPrice())
+                        <span class="text-muted text-decoration-line-through small me-1">
+                            {{ \App\Support\BengaliNumber::money($displayVariant->oldPrice()) }}
+                        </span>
+                    @endif
+                    <span class="fw-bold text-success fs-5">
+                        @price($displayVariant->price, $displayVariant->unitLabel())
+                    </span>
+
+                    {{-- স্টক ব্যাজ — শুধু প্রয়োজনে (কার্ড পরিচ্ছন্ন রাখতে) --}}
+                    @if ($displayVariant->isOutOfStock())
+                        <div class="mt-1"><span class="badge text-bg-secondary">{{ __('inventory.statuses.out_of_stock') }}</span></div>
+                    @elseif ($displayVariant->isLowStock())
+                        <div class="mt-1"><span class="badge text-bg-warning text-dark">{{ __('inventory.statuses.low_stock') }}</span></div>
+                    @endif
+
+                    @if ($activeCount > 1)
+                        <div class="mt-1">
+                            <span class="badge text-bg-light text-success border">
+                                {{ __('product.variant.variants_count', ['count' => \App\Support\BengaliNumber::format($activeCount)]) }}
+                            </span>
+                        </div>
+                    @endif
+                @else
+                    @if ($old = $product->oldPrice())
+                        <span class="text-muted text-decoration-line-through small me-1">
+                            {{ \App\Support\BengaliNumber::money($old) }}
+                        </span>
+                    @endif
+                    <span class="fw-bold text-success fs-5">
+                        @price($product->effectivePrice(), $product->unitLabel())
                     </span>
                 @endif
-                <span class="fw-bold text-success fs-5">
-                    @price($product->effectivePrice(), $product->unitLabel())
-                </span>
             </div>
 
             <div class="d-flex flex-wrap gap-2">
+                @php
+                    $purchasable = $displayVariant
+                        ? $displayVariant->isPurchasable()
+                        : $product->isInStock();
+                @endphp
                 <button type="button"
                         class="btn btn-success btn-sm flex-grow-1 add-to-cart-btn"
                         data-product-id="{{ $product->id }}"
-                        {{ ! $product->isInStock() ? 'disabled' : '' }}
-                        title="{{ $product->isInStock() ? '' : __('product.stock.out_of_stock') }}">
+                        data-variant-id="{{ $displayVariant?->id }}"
+                        {{ ! $purchasable ? 'disabled' : '' }}
+                        title="{{ $purchasable ? '' : __('product.stock.out_of_stock') }}">
                     <i class="bi bi-cart-plus me-1"></i>{{ __('product.common.add_to_cart') }}
                 </button>
                 <a href="{{ route('products.show', $product) }}" class="btn btn-outline-secondary btn-sm">

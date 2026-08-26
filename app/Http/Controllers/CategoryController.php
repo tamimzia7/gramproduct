@@ -20,7 +20,10 @@ class CategoryController extends Controller
             abort(404);
         }
 
-        $products = $category->products()->active()->latest()->paginate(12);
+        $products = $category->products()->active()
+            ->with(['category', 'primaryImage', 'images', 'activeVariants.inventory'])
+            ->latest()
+            ->paginate(12);
 
         return view('categories.show', compact('category', 'products'));
     }

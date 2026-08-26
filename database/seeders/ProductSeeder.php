@@ -162,7 +162,7 @@ class ProductSeeder extends Seeder
         foreach ($data as $item) {
             $category = Category::where('slug', $item['category'])->first();
 
-            if (! $category) {
+            if (! $category || Product::where('sku', $item['sku'])->exists()) {
                 continue;
             }
 
@@ -212,6 +212,74 @@ class ProductSeeder extends Seeder
                 'origin' => 'পদ্মা অঞ্চল',
             ]);
             $product->save();
+        }
+
+        $this->seedVariants();
+    }
+
+    /**
+     * Phase 04 — ভ্যারিয়েন্ট ডেমো ডেটা (নাজিরশাইল চাল, দেশি কৈ মাছ, খাঁটি সরিষার তেল)
+     */
+    private function seedVariants(): void
+    {
+        // খাঁটি সরিষার তেল — ML/LITER ভ্যারিয়েন্টসহ নতুন ডেমো পণ্য
+        if (! Product::where('sku', 'OIL-MUSTARD-001')->exists()) {
+            $oilCategory = Category::where('slug', 'spices-herbs')->first();
+
+            if ($oilCategory) {
+                Product::create([
+                    'category_id' => $oilCategory->id,
+                    'name' => 'খাঁটি সরিষার তেল',
+                    'sku' => 'OIL-MUSTARD-001',
+                    'slug' => 'khati-sorishar-tel',
+                    'short_description' => 'ঘানিভাঙা খাঁটি সরিষার তেল — সম্পূর্ণ অখাদ্য রাসায়নিকমুক্ত।',
+                    'description' => "দেশি সরিষা থেকে ঐতিহ্যবাহী ঘানিতে ভাঙা খাঁটি সরিষার তেল।\nরান্না, আচার ও চুল-ত্বকের যত্নে ব্যবহারযোগ্য।",
+                    'base_price' => 320,
+                    'compare_at_price' => null,
+                    'unit' => ProductUnit::LITER,
+                    'product_type' => 'physical',
+                    'is_active' => true,
+                    'stock_status' => 'in_stock',
+                    'is_featured' => true,
+                    'sort_order' => 0,
+                    'origin' => 'টাঙ্গাইল',
+                ]);
+            }
+        }
+
+        // slug => ভ্যারিয়েন্ট তালিকা
+        $variantsBySlug = [
+            'nazirshail-chal' => [
+                ['name' => '১ কেজি', 'sku' => 'RICE-NS-1KG', 'unit' => 'kg', 'quantity' => 1, 'price' => 120, 'compare_at_price' => 140, 'stock_status' => 'in_stock', 'is_default' => true, 'sort_order' => 1],
+                ['name' => '৫ কেজি', 'sku' => 'RICE-NS-5KG', 'unit' => 'kg', 'quantity' => 5, 'price' => 570, 'compare_at_price' => null, 'stock_status' => 'in_stock', 'is_default' => false, 'sort_order' => 2],
+                ['name' => '১০ কেজি', 'sku' => 'RICE-NS-10KG', 'unit' => 'kg', 'quantity' => 10, 'price' => 1100, 'compare_at_price' => 1200, 'stock_status' => 'in_stock', 'is_default' => false, 'sort_order' => 3],
+                ['name' => '২৫ কেজি', 'sku' => 'RICE-NS-25KG', 'unit' => 'bag', 'quantity' => 25, 'price' => 2600, 'compare_at_price' => null, 'stock_status' => 'pre_order', 'is_default' => false, 'sort_order' => 4],
+            ],
+            'desi-koi-mach' => [
+                ['name' => '৫০০ গ্রাম', 'sku' => 'FISH-KOI-500G', 'unit' => 'gram', 'quantity' => 500, 'price' => 200, 'compare_at_price' => null, 'stock_status' => 'in_stock', 'is_default' => false, 'sort_order' => 1],
+                ['name' => '১ কেজি', 'sku' => 'FISH-KOI-1KG', 'unit' => 'kg', 'quantity' => 1, 'price' => 380, 'compare_at_price' => 420, 'stock_status' => 'in_stock', 'is_default' => true, 'sort_order' => 2],
+                ['name' => '২ কেজি', 'sku' => 'FISH-KOI-2KG', 'unit' => 'kg', 'quantity' => 2, 'price' => 740, 'compare_at_price' => null, 'stock_status' => 'in_stock', 'is_default' => false, 'sort_order' => 3],
+            ],
+            'khati-sorishar-tel' => [
+                ['name' => '২৫০ মিলিলিটার', 'sku' => 'OIL-MST-250ML', 'unit' => 'ml', 'quantity' => 250, 'price' => 95, 'compare_at_price' => null, 'stock_status' => 'in_stock', 'is_default' => false, 'sort_order' => 1],
+                ['name' => '৫০০ মিলিলিটার', 'sku' => 'OIL-MST-500ML', 'unit' => 'ml', 'quantity' => 500, 'price' => 180, 'compare_at_price' => null, 'stock_status' => 'in_stock', 'is_default' => false, 'sort_order' => 2],
+                ['name' => '১ লিটার', 'sku' => 'OIL-MST-1LTR', 'unit' => 'liter', 'quantity' => 1, 'price' => 340, 'compare_at_price' => 380, 'stock_status' => 'in_stock', 'is_default' => true, 'sort_order' => 3],
+            ],
+        ];
+
+        foreach ($variantsBySlug as $slug => $variants) {
+            $product = Product::where('slug', $slug)->first();
+
+            if (! $product) {
+                continue;
+            }
+
+            foreach ($variants as $variantData) {
+                $product->variants()->firstOrCreate(
+                    ['sku' => $variantData['sku']],
+                    $variantData,
+                );
+            }
         }
     }
 }

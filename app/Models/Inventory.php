@@ -12,49 +12,49 @@ class Inventory extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_id',
         'product_variant_id',
         'quantity',
         'reserved_quantity',
-        'damaged_quantity',
-        'wasted_quantity',
         'low_stock_threshold',
-        'is_in_stock',
+        'allow_backorder',
     ];
 
     protected $casts = [
-        'product_id' => 'integer',
         'product_variant_id' => 'integer',
         'quantity' => 'integer',
         'reserved_quantity' => 'integer',
-        'damaged_quantity' => 'integer',
-        'wasted_quantity' => 'integer',
         'low_stock_threshold' => 'integer',
-        'is_in_stock' => 'boolean',
+        'allow_backorder' => 'boolean',
     ];
-
-    public function product(): BelongsTo
-    {
-        return $this->belongsTo(Product::class);
-    }
 
     public function variant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 
-    public function adjustments(): HasMany
+    public function transactions(): HasMany
     {
-        return $this->hasMany(StockAdjustment::class);
+        return $this->hasMany(InventoryTransaction::class, 'product_variant_id', 'product_variant_id');
     }
 
+    /**
+     * উপলব্ধ স্টক = বর্তমান স্টক − সংরক্ষিত স্টক
+     *
+     * গণনা করা মান — ডাটাবেসে আলাদা করে রাখা হয় না (একক উৎস)।
+     */
     public function getAvailableQuantityAttribute(): int
     {
         return max(0, $this->quantity - $this->reserved_quantity);
     }
 
-    public function isInStock(): bool
+    public function isLowStock(): bool
     {
-        return $this->quantity > 0;
+        return $this->available_quantity > 0
+            && $this->available_quantity <= $this->low_stock_threshold;
+    }
+
+    public function isOutOfStock(): bool
+    {
+        return $this->available_quantity <= 0 && ! $this->allow_backorder;
     }
 }

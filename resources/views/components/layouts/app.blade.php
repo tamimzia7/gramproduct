@@ -9,6 +9,9 @@
 
     <title>{{ $title ?? config('app.name', 'Gram Product') }}</title>
 
+    {{-- অ্যাপ্লিকেশন আইকন (ফেভিকন) --}}
+    <link rel="icon" type="image/png" href="{{ asset('images/icon.png') }}">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>

@@ -16,7 +16,7 @@ class ProductController extends Controller
     public function index(Request $request): View
     {
         $query = Product::active()
-            ->with(['category', 'primaryImage', 'images']);
+            ->with(['category', 'primaryImage', 'images', 'activeVariants.inventory']);
 
         // অনুসন্ধান
         $search = trim((string) $request->input('q'));
@@ -56,9 +56,7 @@ class ProductController extends Controller
         $product->load([
             'category.parent',
             'images',
-            'variants' => function ($query) {
-                $query->active()->ordered();
-            },
+            'activeVariants.inventory',
         ]);
 
         $breadcrumb = $product->getCategoryBreadcrumb();

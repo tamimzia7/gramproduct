@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Cart;
 use App\Models\CartItem;
-use App\Models\Inventory;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
@@ -47,7 +46,8 @@ class CartService
                 ->where('id', $productVariantId)
                 ->where('is_active', true)
                 ->firstOrFail();
-            $unitPrice = $variant->hasDiscount() ? $variant->discount_price : $variant->price;
+            // নির্বাচিত ভ্যারিয়েন্টের মূল্যই চূড়ান্ত ক্রয়মূল্য
+            $unitPrice = $variant->price;
         } else {
             $unitPrice = $product->hasDiscount() ? $product->discount_price : $product->base_price;
         }

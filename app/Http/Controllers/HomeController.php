@@ -20,7 +20,7 @@ class HomeController extends Controller
             ->get();
 
         $latestProducts = Product::active()
-            ->with(['category', 'primaryImage', 'images'])
+            ->with(['category', 'primaryImage', 'images', 'activeVariants.inventory'])
             ->latest()
             ->take(8)
             ->get();
