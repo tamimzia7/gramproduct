@@ -49,11 +49,10 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(WishlistItem::class);
     }
 
-    public function defaultAddress(string $type = 'shipping'): ?Address
+    public function defaultAddress(): ?Address
     {
         return $this->addresses()
             ->where('is_default', true)
-            ->where('type', $type)
             ->first();
     }
 }

@@ -37,39 +37,30 @@
         </div>
     </section>
 
-    {{-- ======================= Quick Categories ======================= --}}
+    {{-- ======================= Quick Categories =======================
+         Hero-র ঠিক নিচে — মূল-স্তরের সক্রিয় ক্যাটাগরি; মোবাইলে swipe row --}}
     @if ($quickCategories->isNotEmpty())
-        <section class="py-5">
+        <section class="category-section">
             <div class="container">
                 <x-section-header
                         :title="__('home.quick_categories.title')"
+                        :subtitle="__('home.quick_categories.subtitle')"
                         :view-all-url="route('categories.index')"
                         :view-all-text="__('home.quick_categories.view_all')" />
-                <div class="row g-3">
+
+                <div class="category-strip" role="list">
                     @foreach ($quickCategories as $category)
-                        <div class="col-6 col-md-4 col-lg-2">
-                            <a href="{{ route('categories.show', $category) }}"
-                               class="text-decoration-none h-100 d-block"
-                               aria-label="{{ $category->name }}">
-                                <div class="card h-100 border-0 shadow-sm text-center category-card">
-                                    <div class="card-body py-4">
-                                        @if ($category->image)
-                                            <img src="{{ asset('storage/'.$category->image) }}"
-                                                 alt="{{ $category->name }}" loading="lazy"
-                                                 class="rounded-circle mb-2 object-fit-cover"
-                                                 style="width: 64px; height: 64px;">
-                                        @else
-                                            <div class="fs-1 mb-2" aria-hidden="true">🧺</div>
-                                        @endif
-                                        <h3 class="h6 mt-2 mb-1 text-body">{{ $category->name }}</h3>
-                                        <small class="text-muted">
-                                            {{ \App\Support\BengaliNumber::format($category->products_count) }} টি পণ্য
-                                        </small>
-                                    </div>
-                                </div>
-                            </a>
+                        <div role="listitem">
+                            <x-category-card :category="$category" />
                         </div>
                     @endforeach
+                </div>
+
+                <div class="text-center mt-4 d-lg-none">
+                    <a href="{{ route('categories.index') }}" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                        {{ __('home.quick_categories.view_all') }}
+                        <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
                 </div>
             </div>
         </section>

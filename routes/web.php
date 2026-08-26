@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AddressController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\InventoryController as AdminInventoryController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\WishlistController;
@@ -64,6 +66,18 @@ Route::middleware('auth')->group(function () {
     Route::delete('/wishlist/{wishlistItem}', [WishlistController::class, 'destroy'])->name('wishlist.destroy');
     Route::post('/wishlist/{wishlistItem}/move-to-cart', [WishlistController::class, 'moveToCart'])
         ->name('wishlist.move-to-cart');
+
+    // ---------- ঠিকানা ব্যবস্থাপনা ----------
+    Route::post('/addresses', [AddressController::class, 'store'])->name('addresses.store');
+    Route::patch('/addresses/{address}', [AddressController::class, 'update'])->name('addresses.update');
+    Route::delete('/addresses/{address}', [AddressController::class, 'destroy'])->name('addresses.destroy');
+    Route::patch('/addresses/{address}/default', [AddressController::class, 'setDefault'])
+        ->name('addresses.default');
+
+    // ---------- চেকআউট ----------
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
 
     // নিজের cart item পরিবর্তন — ownership controller-এ যাচাই হয়
     Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->name('cart.update');

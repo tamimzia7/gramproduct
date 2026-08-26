@@ -24,17 +24,20 @@ class HomepageService
     }
 
     /**
-     * কুইক ক্যাটাগরি — ফিচার্ড + সক্রিয়, পণ্যসংখ্যাসহ (একটি অতিরিক্ত কুয়েরি)
+     * কুইক ক্যাটাগরি — মূল-স্তরের সক্রিয় ক্যাটাগরি (sort_order অনুযায়ী),
+     * শুধুমাত্র available পণ্যযুক্তগুলো; একটি aggregate কুয়েরিতে count।
      */
     public function quickCategories(): Collection
     {
         return Category::query()
             ->active()
-            ->featured()
+            ->rootLevel()
             ->ordered()
             ->withCount(['products as products_count' => fn ($query) => $query->active()])
+            ->get()
+            ->filter(fn (Category $category) => $category->products_count > 0)
             ->take(config('shop.homepage.quick_categories_limit'))
-            ->get();
+            ->values();
     }
 
     /**

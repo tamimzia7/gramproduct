@@ -15,14 +15,155 @@ main {
     flex-shrink: 0;
 }
 
-/* ক্যাটাগরি কার্ড — হালকা hover লিফট */
-.category-card {
-    transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+/* ==========================================================================
+   হোমপেজ ক্যাটাগরি সেকশন — Hero-র ঠিক নিচে
+   মোবাইল: horizontal swipe row · ট্যাবলেট: 4–6/row · ডেস্কটপ: 8–10/row
+   ========================================================================== */
+
+.category-section {
+    padding-top: 36px;
+    padding-bottom: 44px;
+    background: #fff;
 }
 
-.category-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08) !important;
+/* স্ট্রিপ — ডিফল্ট (মোবাইল): swipe-যোগ্য horizontal row */
+.category-strip {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    scrollbar-width: none; /* Firefox */
+}
+
+.category-strip::-webkit-scrollbar {
+    display: none;
+}
+
+.category-strip > [role='listitem'] {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+}
+
+/* ---------- Tablet: wrap grid, 4–6/row ---------- */
+@media (min-width: 576px) {
+    .category-section {
+        padding-top: 32px;
+        padding-bottom: 40px;
+    }
+
+    .category-strip {
+        flex-wrap: wrap;
+        justify-content: center;
+        overflow-x: visible;
+    }
+
+    .category-strip > [role='listitem'] {
+        width: calc(25% - 14px); /* 4/row */
+    }
+}
+
+@media (min-width: 768px) {
+    .category-strip > [role='listitem'] {
+        width: calc(16.666% - 15px); /* 6/row */
+    }
+}
+
+/* ---------- Desktop: 8–10/row (fixed-width cards, fewer items stay tidy) ---------- */
+@media (min-width: 992px) {
+    .category-strip > [role='listitem'] {
+        width: calc(10% - 16.2px); /* 10/row */
+    }
+}
+
+@media (min-width: 1400px) {
+    .category-strip > [role='listitem'] {
+        width: calc(12.5% - 15.4px); /* খুব চওড়া স্ক্রিনে 8/row — কার্ড আরামদায়ক */
+    }
+}
+
+/* ---------- Category Card ---------- */
+.category-card {
+    display: block;
+    height: 100%;
+}
+
+.category-card__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    height: 100%;
+    padding: 18px 10px 14px;
+    background: #fff;
+    border: 1px solid #e3ede1;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(23, 58, 28, 0.05);
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        border-color 0.18s ease;
+}
+
+.category-card__media {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #f1f7ee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.18s ease;
+}
+
+.category-card__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.category-card__fallback {
+    font-size: 1.75rem;
+    line-height: 1;
+}
+
+.category-card__name {
+    margin: 10px 0 2px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #22331f;
+    line-height: 1.3;
+}
+
+.category-card__count {
+    color: #5d7a63;
+    font-size: 0.72rem;
+}
+
+/* Hover / focus — হালকা লিফট + shadow + image scale + green accent */
+@media (hover: hover) {
+    .category-card:hover .category-card__inner,
+    .category-card:focus-visible .category-card__inner {
+        transform: translateY(-4px);
+        border-color: #86b97c;
+        box-shadow: 0 10px 22px rgba(23, 58, 28, 0.12);
+    }
+
+    .category-card:hover .category-card__media,
+    .category-card:focus-visible .category-card__media {
+        transform: scale(1.07);
+    }
+}
+
+.category-card:focus-visible {
+    outline: none;
+}
+
+.category-card:focus-visible .category-card__inner {
+    outline: 2px solid #2f7d32;
+    outline-offset: 2px;
 }
 
 /* ==========================================================================

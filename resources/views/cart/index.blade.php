@@ -166,11 +166,10 @@
                                     </div>
                                 </dl>
                                 <div class="d-grid gap-2 mt-3">
-                                    {{-- চেকআউট Phase 08-এ আসবে — কোনো ভুয়া ফাংশনালিটি নয় --}}
-                                    <button type="button" class="btn btn-success btn-lg" disabled
-                                            title="{{ __('cart.cart.coming_soon') }}">
-                                        <i class="bi bi-credit-card me-2"></i>{{ __('cart.cart.checkout') }}
-                                    </button>
+                                    {{-- Phase 08 — চেকআউট চালু; guest হলে login → intended ফেরত --}}
+                                    <a href="{{ route('checkout.index') }}" class="btn btn-success btn-lg">
+                                        <i class="bi bi-credit-card-2-front me-2"></i>{{ __('cart.cart.checkout') }}
+                                    </a>
                                     <a href="{{ route('products.index') }}" class="btn btn-outline-success">
                                         {{ __('cart.cart.continue_shopping') }}
                                     </a>

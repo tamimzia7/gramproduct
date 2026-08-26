@@ -15,7 +15,7 @@ return [
     */
 
     'homepage' => [
-        'quick_categories_limit' => 6,
+        'quick_categories_limit' => 10,
         'featured_limit' => 8,
 
         'sections' => [

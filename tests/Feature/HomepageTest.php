@@ -56,9 +56,30 @@ class HomepageTest extends TestCase
     {
         $visible = $this->makeCategory('chal', ['name' => 'চাল', 'is_featured' => true]);
 
+        // খালি ক্যাটাগরি লুকানো হয় — available পণ্যযুক্ত ক্যাটাগরিই দেখায়
+        Product::factory()->create(['name' => 'নাজিরশাইল চাল', 'category_id' => $visible->id]);
+
         $this->get(route('home'))
             ->assertOk()
             ->assertSee($visible->name);
+    }
+
+    public function test_empty_categories_are_hidden_from_homepage(): void
+    {
+        // পণ্যহীন সক্রিয় ক্যাটাগরি — homepage-এর category strip-এ দেখা যায় না (§18)
+        $populated = $this->makeCategory('bhor', ['name' => 'ভরা ক্যাটাগরি', 'is_featured' => true]);
+        Product::factory()->create(['name' => 'ভর্তি পণ্য', 'category_id' => $populated->id]);
+
+        $this->makeCategory('khali', ['name' => 'খালি ক্যাটাগরি', 'is_featured' => true]);
+
+        $content = $this->get(route('home'))->getContent();
+
+        preg_match('/<section class="category-section">(.*?)<\/section>/s', $content, $matches);
+        $section = $matches[1] ?? '';
+
+        // ভরা ক্যাটাগরি আছে, খালিটি নেই
+        $this->assertStringContainsString('ভরা ক্যাটাগরি', $section);
+        $this->assertStringNotContainsString('খালি ক্যাটাগরি', $section);
     }
 
     public function test_homepage_hides_inactive_categories(): void
