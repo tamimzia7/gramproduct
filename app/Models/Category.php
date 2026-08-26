@@ -54,6 +54,14 @@ class Category extends Model
         return $query->where('is_active', true);
     }
 
+    /**
+     * শুধুমাত্র মূল-স্তরের ক্যাটাগরি (parent_id = null)
+     */
+    public function scopeRootLevel(Builder $query): Builder
+    {
+        return $query->whereNull('parent_id');
+    }
+
     public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('sort_order')->orderBy('name');

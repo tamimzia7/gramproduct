@@ -131,7 +131,7 @@ class Product extends Model
     }
 
     /**
-     * নাম, সংক্ষিপ্ত বিবরণ ও SKU দিয়ে অনুসন্ধান
+     * নাম, সংক্ষিপ্ত বিবরণ, SKU ও ক্যাটাগরির নাম দিয়ে অনুসন্ধান
      */
     public function scopeSearch(Builder $query, ?string $term): Builder
     {
@@ -142,7 +142,9 @@ class Product extends Model
         return $query->where(function (Builder $q) use ($term) {
             $q->where('name', 'like', "%{$term}%")
                 ->orWhere('short_description', 'like', "%{$term}%")
-                ->orWhere('sku', 'like', "%{$term}%");
+                ->orWhere('sku', 'like', "%{$term}%")
+                ->orWhereHas('category', fn (Builder $category) => $category
+                    ->where('name', 'like', "%{$term}%"));
         });
     }
 

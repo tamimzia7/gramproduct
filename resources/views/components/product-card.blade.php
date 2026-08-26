@@ -10,6 +10,7 @@
             <img src="{{ $imageUrl }}"
                  alt="{{ $product->imageAltText() }}"
                  class="card-img-top"
+                 loading="lazy" decoding="async"
                  style="height: 200px; object-fit: cover;">
         @else
             <div class="d-flex align-items-center justify-content-center bg-success-subtle"

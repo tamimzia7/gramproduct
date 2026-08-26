@@ -1,0 +1,422 @@
+<?php
+
+use App\Models\Category;
+use App\Models\Inventory;
+use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Models\Role;
+use App\Models\User;
+use App\Support\BengaliNumber;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Tests\TestCase;
+
+class HomepageTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Role::updateOrCreate(
+            ['slug' => 'super-admin'],
+            ['name' => 'Super Admin', 'description' => 'Full access', 'permissions' => [], 'is_system' => true]
+        );
+    }
+
+    private function createAdmin(): User
+    {
+        $user = User::factory()->create(['is_active' => true]);
+        $user->assignRole('super-admin');
+
+        return $user;
+    }
+
+    private function makeCategory(string $slug, array $overrides = []): Category
+    {
+        return Category::factory()->create(array_merge([
+            'slug' => $slug,
+            'is_active' => true,
+        ], $overrides));
+    }
+
+    // ===================== 1-2. Homepage & categories =====================
+
+    public function test_homepage_loads_with_hero(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('গ্রামের খাঁটি স্বাদ, আপনার ঘরে')
+            ->assertSee('পণ্য দেখুন')
+            ->assertSee('ক্যাটাগরি দেখুন');
+    }
+
+    public function test_homepage_displays_active_featured_categories(): void
+    {
+        $visible = $this->makeCategory('chal', ['name' => 'চাল', 'is_featured' => true]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee($visible->name);
+    }
+
+    public function test_homepage_hides_inactive_categories(): void
+    {
+        $this->makeCategory('hidden-cat', ['name' => 'লুকানো ক্যাটাগরি', 'is_featured' => true, 'is_active' => false]);
+
+        $content = $this->get(route('home'))->getContent();
+
+        $this->assertStringNotContainsString('লুকানো ক্যাটাগরি', $content);
+    }
+
+    // ===================== 3-5. Featured / inactive products =====================
+
+    public function test_homepage_displays_featured_products(): void
+    {
+        $product = Product::factory()->create(['name' => 'বিশেষ সরিষার তেল', 'is_featured' => true]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('বিশেষ পণ্য')
+            ->assertSee($product->name)
+            ->assertSee('কার্টে যোগ করুন');
+    }
+
+    public function test_homepage_hides_inactive_products(): void
+    {
+        Product::factory()->inactive()->create(['name' => 'অদৃশ্য পণ্য', 'is_featured' => true]);
+        Product::factory()->create(['name' => 'দৃশ্যমান পণ্য', 'is_featured' => true]);
+
+        $content = $this->get(route('home'))->getContent();
+
+        $this->assertStringNotContainsString('অদৃশ্য পণ্য', $content);
+        $this->assertStringContainsString('দৃশ্যমান পণ্য', $content);
+    }
+
+    // ===================== 10-12. Dynamic collection sections =====================
+
+    public function test_rice_section_pulls_products_from_configured_category_tree(): void
+    {
+        $rice = $this->makeCategory('rice-grains', ['name' => 'চাল ও ডাল']);
+        $nazir = $this->makeCategory('kataribhog-rice', ['name' => 'নাজিরশাইল', 'parent_id' => $rice->id]);
+
+        $product = Product::factory()->create(['name' => 'নাজিরশাইল চাল', 'category_id' => $nazir->id]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('আমাদের চাল')
+            ->assertSee($product->name);
+    }
+
+    public function test_section_is_hidden_gracefully_without_matching_category(): void
+    {
+        // rice-grains ক্যাটাগরি নেই — সেকশনটি ভেঙে পড়ার বদলে অদৃশ্য হবে
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertDontSee('আমাদের চাল');
+    }
+
+    public function test_fish_section_shows_only_active_products_of_fish_tree(): void
+    {
+        $fish = $this->makeCategory('fish-seafood', ['name' => 'মাছ']);
+        $freshwater = $this->makeCategory('freshwater-fish', ['name' => 'মিঠে পানির মাছ', 'parent_id' => $fish->id]);
+
+        Product::factory()->create(['name' => 'দেশি কৈ মাছ', 'category_id' => $freshwater->id]);
+        Product::factory()->inactive()->create(['name' => 'গোপন ইলিশ', 'category_id' => $freshwater->id]);
+
+        $content = $this->get(route('home'))->getContent();
+
+        $this->assertStringContainsString('তাজা মাছ', $content);
+        $this->assertStringContainsString('দেশি কৈ মাছ', $content);
+        $this->assertStringNotContainsString('গোপন ইলিশ', $content);
+    }
+
+    // ===================== 6-8. Listing, search, filter =====================
+
+    public function test_product_listing_works(): void
+    {
+        $product = Product::factory()->create(['name' => 'তালিকার পণ্য']);
+
+        $this->get(route('products.index'))
+            ->assertOk()
+            ->assertSee($product->name);
+    }
+
+    public function test_search_matches_product_and_category_names(): void
+    {
+        $honey = Product::factory()->create(['name' => 'সুন্দরবনের মধু']);
+        $riceCat = $this->makeCategory('chal', ['name' => 'চাল']);
+        Product::factory()->create(['name' => 'কাটারিভোগ চাল', 'category_id' => $riceCat->id]);
+
+        // পণ্যের নামে
+        $this->get(route('products.index', ['q' => 'মধু']))
+            ->assertOk()
+            ->assertSee($honey->name);
+
+        // ক্যাটাগরির নামে
+        $this->get(route('products.index', ['q' => 'চাল']))
+            ->assertOk()
+            ->assertSee('কাটারিভোগ চাল');
+    }
+
+    public function test_category_filtering_on_listing_works(): void
+    {
+        $fishCat = $this->makeCategory('machh', ['name' => 'মাছ']);
+        $vegCat = $this->makeCategory('shobji', ['name' => 'সবজি']);
+
+        $fish = Product::factory()->create(['name' => 'কৈ মাছ', 'category_id' => $fishCat->id]);
+        Product::factory()->create(['name' => 'তাজা লাউ', 'category_id' => $vegCat->id]);
+
+        $response = $this->get(route('products.index', ['category' => 'machh']));
+        $response->assertOk();
+        $this->assertTrue(str_contains($response->getContent(), $fish->name));
+        $this->assertFalse(str_contains($response->getContent(), 'তাজা লাউ'));
+    }
+
+    // ===================== 9-10. Category pages =====================
+
+    public function test_category_page_works_with_breadcrumb_and_seo(): void
+    {
+        $root = $this->makeCategory('chal', [
+            'name' => 'চাল',
+            'description' => 'দেশি চালের সংগ্রহ।',
+            'seo_title' => 'খাঁটি দেশি চাল',
+        ]);
+        Product::factory()->create(['name' => 'নাজিরশাইল চাল', 'category_id' => $root->id]);
+
+        $this->get(route('categories.show', $root))
+            ->assertOk()
+            ->assertSee('<title>খাঁটি দেশি চাল</title>', false)
+            ->assertSee('হোম')
+            ->assertSee('দেশি চালের সংগ্রহ।')
+            ->assertSee('নাজিরশাইল চাল');
+    }
+
+    public function test_subcategories_listed_and_their_products_included_in_parent(): void
+    {
+        $root = $this->makeCategory('chal', ['name' => 'চাল']);
+        $child = $this->makeCategory('nazirshail', ['name' => 'নাজিরশাইল', 'parent_id' => $root->id]);
+
+        Product::factory()->create(['name' => 'কাটারিভোগ চাল', 'category_id' => $root->id]);
+        $childProduct = Product::factory()->create(['name' => 'নাজিরশাইল স্পেশাল', 'category_id' => $child->id]);
+
+        $content = $this->get(route('categories.show', $root))
+            ->assertOk()
+            ->getContent();
+
+        // "এই ক্যাটাগরির ধরন" — সাব-ক্যাটাগরি তালিকা
+        $this->assertStringContainsString('এই ক্যাটাগরির ধরন', $content);
+        $this->assertStringContainsString('নাজিরশাইল', $content);
+
+        // বংশধর ক্যাটাগরির পণ্যও মূল ক্যাটাগরি পেজে দেখা যায়
+        $this->assertStringContainsString($childProduct->name, $content);
+
+        // সাব-ক্যাটাগরি পেজও কাজ করে
+        $this->get(route('categories.show', $child))
+            ->assertOk()
+            ->assertSee('নাজিরশাইল স্পেশাল');
+    }
+
+    public function test_inactive_category_page_returns_404(): void
+    {
+        $hidden = $this->makeCategory('luka-anno', ['name' => 'লুকানো', 'is_active' => false]);
+
+        $this->get(route('categories.show', $hidden))->assertNotFound();
+    }
+
+    public function test_all_categories_index_page_works(): void
+    {
+        $cat = $this->makeCategory('machh', ['name' => 'মাছ']);
+        $this->makeCategory('luka', ['name' => 'লুকানো ক্যাটাগরি', 'is_active' => false]);
+
+        $this->get(route('categories.index'))
+            ->assertOk()
+            ->assertSee($cat->name)
+            ->assertDontSee('লুকানো ক্যাটাগরি');
+    }
+
+    // ===================== 11-14. Product detail =====================
+
+    private function makeDetailProduct(): Product
+    {
+        $product = Product::factory()->create([
+            'name' => 'নাজিরশাইল চাল',
+            'description' => 'উন্নত মানের বর্ণনা।',
+        ]);
+
+        ProductVariant::factory()->default()->create([
+            'product_id' => $product->id,
+            'name' => '১ কেজি',
+            'price' => 120,
+        ]);
+
+        return $product;
+    }
+
+    public function test_product_detail_works(): void
+    {
+        $product = $this->makeDetailProduct();
+
+        $this->get(route('products.show', $product))
+            ->assertOk()
+            ->assertSee($product->name)
+            ->assertSee('ভ্যারিয়েন্ট নির্বাচন করুন')
+            ->assertSee(BengaliNumber::money(120))
+            ->assertSee($product->description);
+    }
+
+    public function test_variant_selection_data_is_embedded_for_detail_page(): void
+    {
+        $product = $this->makeDetailProduct();
+        ProductVariant::factory()->create([
+            'product_id' => $product->id,
+            'name' => '৫ কেজি',
+            'price' => 570,
+            'sort_order' => 2,
+        ]);
+
+        $content = $this->get(route('products.show', $product))->getContent();
+
+        // JS payload — উভয় ভ্যারিয়েন্টের ডেটা আগেই এমবেড করা
+        $this->assertStringContainsString('১ কেজি', $content);
+        $this->assertStringContainsString('৫ কেজি', $content);
+        $this->assertMatchesRegularExpression('/"purchasable":true/u', $content);
+    }
+
+    public function test_unavailable_variant_reports_out_of_stock_status(): void
+    {
+        $product = Product::factory()->create();
+        $variant = ProductVariant::factory()->default()->create(['product_id' => $product->id]);
+        Inventory::create([
+            'product_variant_id' => $variant->id,
+            'quantity' => 0,
+        ]);
+
+        $content = $this->get(route('products.show', $product))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertMatchesRegularExpression('/"purchasable":false/u', $content);
+        $this->assertMatchesRegularExpression('/add-to-cart-btn[^>]*disabled/u', $content);
+    }
+
+    public function test_related_products_exclude_current_product(): void
+    {
+        $category = $this->makeCategory('chal');
+        $current = Product::factory()->create(['name' => 'নিজের পণ্য', 'category_id' => $category->id]);
+        Product::factory()->create(['name' => 'সম্পর্কিত পণ্য এক', 'category_id' => $category->id]);
+        Product::factory()->create(['name' => 'সম্পর্কিত পণ্য দুই', 'category_id' => $category->id]);
+
+        $content = $this->get(route('products.show', $current))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('সম্পর্কিত পণ্য', $content);
+        $this->assertStringContainsString('সম্পর্কিত পণ্য এক', $content);
+
+        // নিজের পণ্য নিজের রিলেটেড সেকশনে থাকবে না
+        preg_match('/সম্পর্কিত পণ্য.*$/s', $content, $matches);
+        if (isset($matches[0])) {
+            $this->assertStringNotContainsString('নিজের পণ্য', $matches[0]);
+        }
+    }
+
+    // ===================== 15-16. Pagination & empty states =====================
+
+    public function test_product_listing_pagination_works(): void
+    {
+        Product::factory()->count(13)->create();
+
+        $response = $this->get(route('products.index'));
+        $response->assertOk();
+        $this->assertCount(12, $response->viewData('products'));
+
+        $this->get(route('products.index', ['page' => 2]))->assertOk();
+    }
+
+    public function test_empty_search_and_empty_category_show_bengali_messages(): void
+    {
+        $this->get(route('products.index', ['q' => 'অসম্ভব-xyz']))
+            ->assertOk()
+            ->assertSee('আপনার খোঁজার সাথে মিলেছে এমন কোনো পণ্য পাওয়া যায়নি।');
+
+        $emptyCategory = $this->makeCategory('khali', ['name' => 'খালি ক্যাটাগরি']);
+
+        $this->get(route('categories.show', $emptyCategory))
+            ->assertOk()
+            ->assertSee('এই ক্যাটাগরিতে এখনো কোনো পণ্য যোগ করা হয়নি।');
+    }
+
+    // ===================== 17-18. Bengali-only UI =====================
+
+    public function test_customer_pages_use_bengali_labels_and_numbers(): void
+    {
+        $this->makeCategory('rice-grains', ['name' => 'চাল', 'is_featured' => true]);
+        Product::factory()->create(['name' => 'নাজিরশাইল চাল', 'base_price' => 120]);
+
+        foreach ([route('home'), route('products.index'), route('categories.index')] as $url) {
+            $this->get($url)
+                ->assertOk()
+                ->assertSee('হোম');
+        }
+
+        $this->get(route('products.index'))->assertSee('৳'.BengaliNumber::format(120));
+    }
+
+    public function test_customer_pages_contain_no_unintended_english_ui_strings(): void
+    {
+        $category = $this->makeCategory('machh', ['name' => 'মাছ']);
+        $product = Product::factory()->create(['name' => 'কৈ মাছ', 'category_id' => $category->id]);
+
+        $forbidden = [
+            'Add to Cart', 'Buy Now', 'View Details', 'Out of Stock', 'In Stock',
+            'Categories', 'Search...', 'Related Products', 'No products found', 'Submit',
+        ];
+
+        $urls = [
+            route('home'),
+            route('products.index'),
+            route('categories.index'),
+            route('categories.show', $category),
+            route('products.show', $product),
+        ];
+
+        foreach ($urls as $url) {
+            $response = $this->get($url);
+            $response->assertOk();
+
+            foreach ($forbidden as $needle) {
+                $this->assertStringNotContainsString($needle, $response->getContent(), "\"{$needle}\" found on {$url}");
+            }
+        }
+    }
+
+    // ===================== 19. Admin content protection =====================
+
+    public function test_admin_area_stays_protected_while_customer_pages_are_public(): void
+    {
+        $this->get(route('admin.dashboard'))->assertRedirect();
+        $this->get(route('admin.inventory.index'))->assertRedirect();
+
+        $this->get(route('home'))->assertOk();
+    }
+
+    // ===================== 20. N+1 guard =====================
+
+    public function test_homepage_query_count_is_bounded(): void
+    {
+        // অনেক পণ্য থাকলেও কুয়েরি সংখ্যা সীমিত থাকতে হবে (eager loading)
+        $rice = $this->makeCategory('rice-grains');
+        Product::factory()->count(15)->create(['category_id' => $rice->id, 'is_featured' => true]);
+        Product::factory()->count(15)->create(['category_id' => $rice->id]);
+
+        DB::enableQueryLog();
+        $this->get(route('home'))->assertOk();
+        $queryCount = count(DB::getQueryLog());
+        DB::disableQueryLog();
+
+        // ৩০টি পণ্য + ৪টি সেকশন থাকা সত্ত্বেও কুয়েরি < 60
+        $this->assertLessThan(60, $queryCount, "Homepage executed {$queryCount} queries.");
+    }
+}

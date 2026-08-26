@@ -37,11 +37,12 @@
                     @if ($product->images->count() > 1 || ($product->images->count() === 1 && ! $product->primaryImage))
                         <div class="d-flex gap-2 mt-3 flex-wrap product-gallery">
                             @foreach ($product->images as $img)
-                                <img src="{{ $img->url() }}"
-                                     alt="{{ $img->alt_text ?? $product->name }}"
-                                     class="rounded border gallery-thumb"
-                                     data-full="{{ $img->url() }}"
-                                     style="width: 72px; height: 72px; object-fit: cover; cursor: pointer;">
+                            <img src="{{ $img->url() }}"
+                                 alt="{{ $img->alt_text ?? $product->name }}"
+                                 class="rounded border gallery-thumb"
+                                 loading="lazy" decoding="async"
+                                 data-full="{{ $img->url() }}"
+                                 style="width: 72px; height: 72px; object-fit: cover; cursor: pointer;">
                             @endforeach
                         </div>
                     @endif
@@ -256,6 +257,16 @@
                     @endif
                 </div>
             </div>
+
+            {{-- সম্পর্কিত পণ্য — একই ক্যাটাগরি --}}
+            @if ($relatedProducts->isNotEmpty())
+                <div class="mt-5 pt-4 border-top">
+                    <x-section-header :title="__('home.related.title')"
+                                      :view-all-url="route('categories.show', $product->category)"
+                                      :view-all-text="__('home.sections.view_all')" />
+                    <x-product-grid :products="$relatedProducts" />
+                </div>
+            @endif
         </div>
     </section>
 

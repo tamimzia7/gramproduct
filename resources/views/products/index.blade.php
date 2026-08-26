@@ -42,7 +42,7 @@
                             <div class="col-md-3">
                                 <label for="sort" class="form-label small text-muted">{{ __('product.common.sort') }}</label>
                                 <select id="sort" name="sort" class="form-select">
-                                    <option value="" {{ ! request('sort') ? 'selected' : '' }}>{{ __('product.common.sort_latest') }}</option>
+                                    <option value="" {{ ! request('sort') ? 'selected' : '' }}>{{ __('product.common.sort_relevant') }}</option>
                                     <option value="popular" {{ request('sort') === 'popular' ? 'selected' : '' }}>{{ __('product.common.sort_popular') }}</option>
                                     <option value="price_asc" {{ request('sort') === 'price_asc' ? 'selected' : '' }}>{{ __('product.common.sort_price_asc') }}</option>
                                     <option value="price_desc" {{ request('sort') === 'price_desc' ? 'selected' : '' }}>{{ __('product.common.sort_price_desc') }}</option>
@@ -62,7 +62,11 @@
             @if ($products->isEmpty())
                 <div class="text-center py-5">
                     <i class="bi bi-basket fs-1 text-muted"></i>
-                    <h2 class="h5 mt-3">{{ __('product.common.no_products') }}</h2>
+                    @if (trim((string) $search) !== '')
+                        <h2 class="h5 mt-3">{{ __('product.common.no_search_results') }}</h2>
+                    @else
+                        <h2 class="h5 mt-3">{{ __('product.common.no_products') }}</h2>
+                    @endif
                     <p class="text-muted">{{ __('product.common.no_products_hint') }}</p>
                     <a href="{{ route('products.index') }}" class="btn btn-outline-success btn-sm mt-1">
                         {{ __('product.common.all_products') }}

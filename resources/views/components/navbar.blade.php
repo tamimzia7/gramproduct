@@ -26,7 +26,27 @@
                 </li>
             </ul>
 
-            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            {{-- হেডার অনুসন্ধান — ডেস্কটপে ইনলাইন, মোবাইলে collapsed মেনুতে --}}
+            <form class="d-flex ms-lg-3 mb-3 mb-lg-0" role="search" method="GET" action="{{ route('products.index') }}">
+                <label for="header-search" class="visually-hidden">পণ্য খুঁজুন</label>
+                <input type="search" id="header-search" name="q"
+                       class="form-control form-control-sm me-1 me-lg-2"
+                       placeholder="{{ __('product.common.search_placeholder') }}"
+                       value="{{ request('q') }}"
+                       aria-label="পণ্য খুঁজুন">
+                <button type="submit" class="btn btn-light btn-sm" aria-label="অনুসন্ধান করুন">
+                    <i class="bi bi-search"></i>
+                </button>
+            </form>
+
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
+                {{-- কার্ট ইন্টিগ্রেশন পয়েন্ট — কার্ট মডিউল আসার আগে placeholder; কোনো ভুয়া সংখ্যা নয় --}}
+                <li class="nav-item">
+                    <span class="nav-link d-flex align-items-center gap-1 text-white-50"
+                          title="{{ __('home.cart.coming_soon') }}" aria-label="{{ __('home.cart.label') }}">
+                        <i class="bi bi-cart2 fs-5"></i><small>{{ __('home.cart.label') }}</small>
+                    </span>
+                </li>
                 @auth
                     @php
                         $wishlistCount = \App\Models\WishlistItem::where('user_id', auth()->id())->count();

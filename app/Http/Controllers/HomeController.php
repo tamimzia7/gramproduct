@@ -2,30 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
-use App\Models\Product;
+use App\Services\HomepageService;
 use Illuminate\View\View;
 
 class HomeController extends Controller
 {
+    public function __construct(
+        private HomepageService $homepageService,
+    ) {}
+
     /**
-     * হোম পেজ — ফিচার্ড ক্যাটাগরি ও নতুন পণ্য (ডায়নামিক)
+     * হোমপেজ — সম্পূর্ণ ডায়নামিক সেকশনসহ
      */
     public function home(): View
     {
-        $featuredCategories = Category::active()
-            ->featured()
-            ->ordered()
-            ->take(6)
-            ->get();
-
-        $latestProducts = Product::active()
-            ->with(['category', 'primaryImage', 'images', 'activeVariants.inventory'])
-            ->latest()
-            ->take(8)
-            ->get();
-
-        return view('home', compact('featuredCategories', 'latestProducts'));
+        return view('home', [
+            'quickCategories' => $this->homepageService->quickCategories(),
+            'featuredProducts' => $this->homepageService->featuredProducts(),
+            'sections' => $this->homepageService->sections(),
+        ]);
     }
 
     public function dashboard(): View
