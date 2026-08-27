@@ -1,18 +1,18 @@
-@props(['products', 'cols' => 4])
+@props(['products', 'cols' => 5])
 
 @php
-    // ব্রেকপয়েন্ট ক্লাস — cols=4 (ডিফল্ট) → col-lg-3
+    // Bootstrap row-cols — mobile 2, tablet 3–4, desktop/large per $cols
     $lgClass = match ((int) $cols) {
-        2 => 'col-lg-6',
-        3 => 'col-lg-4',
-        default => 'col-lg-3',
+        3 => 'row-cols-lg-3',
+        4 => 'row-cols-lg-4',
+        default => 'row-cols-lg-5 row-cols-xl-6',
     };
 @endphp
 
 @if ($products->isNotEmpty())
-    <div class="row g-4" {{ $attributes }}>
+    <div class="row g-3 g-md-4 row-cols-2 row-cols-sm-3 row-cols-md-4 {{ $lgClass }}" {{ $attributes }}>
         @foreach ($products as $product)
-            <div class="col-6 col-md-4 {{ $lgClass }}">
+            <div class="col d-flex">
                 <x-product-card :product="$product" />
             </div>
         @endforeach

@@ -37,17 +37,22 @@
         </div>
     </section>
 
-    {{-- ======================= Quick Categories =======================
-         Hero-র ঠিক নিচে — মূল-স্তরের সক্রিয় ক্যাটাগরি; মোবাইলে swipe row --}}
-    @if ($quickCategories->isNotEmpty())
-        <section class="category-section">
-            <div class="container">
-                <x-section-header
-                        :title="__('home.quick_categories.title')"
-                        :subtitle="__('home.quick_categories.subtitle')"
-                        :view-all-url="route('categories.index')"
-                        :view-all-text="__('home.quick_categories.view_all')" />
+    {{-- ======================= Category Section =======================
+         সব active top-level ক্যাটাগরি — কোনো সীমা নেই;
+         child-রা ক্যাটাগরি পেজে browse হয়। Grid rows auto-grow. --}}
+    <section class="category-section">
+        <div class="container">
+            <x-section-header
+                    :title="__('home.quick_categories.title')"
+                    :subtitle="__('home.quick_categories.subtitle')"
+                    :view-all-url="route('categories.index')"
+                    :view-all-text="__('home.quick_categories.view_all')" />
 
+            @if ($quickCategories->isEmpty())
+                <p class="text-muted text-center py-3 mb-0">
+                    {{ __('home.empty.no_categories') }}
+                </p>
+            @else
                 <div class="category-strip" role="list">
                     @foreach ($quickCategories as $category)
                         <div role="listitem">
@@ -62,18 +67,19 @@
                         <i class="bi bi-arrow-right ms-1"></i>
                     </a>
                 </div>
-            </div>
-        </section>
-    @endif
+            @endif
+        </div>
+    </section>
 
-    {{-- ======================= Featured Products ======================= --}}
+    {{-- ======================= Product Showcase =======================
+         Categories-এর ঠিক নিচে — featured → rice fill → latest (config-driven) --}}
     @if ($featuredProducts->isNotEmpty())
-        <section class="py-5 pt-0">
+        <section class="py-5 pt-4">
             <div class="container">
                 <x-section-header
                         :title="__('home.featured.title')"
                         :subtitle="__('home.featured.subtitle')"
-                        :view-all-url="route('products.index', ['sort' => 'popular'])"
+                        :view-all-url="route('products.index')"
                         :view-all-text="__('home.featured.view_all')" />
                 <x-product-grid :products="$featuredProducts" />
             </div>

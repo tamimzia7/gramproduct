@@ -167,6 +167,77 @@ main {
 }
 
 /* ==========================================================================
+   প্রোডাক্ট কার্ড — showcase refinement
+   image zoom + lift (180ms), wishlist ♡ hover-visible, নাম 2-line clamp
+   ========================================================================== */
+
+.product-card {
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.product-card__media {
+    display: block;
+    overflow: hidden;
+}
+
+.product-card__img {
+    transition: transform 0.18s ease;
+}
+
+@media (hover: hover) {
+    .product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 0.9rem 1.6rem rgba(23, 58, 28, 0.14) !important;
+    }
+
+    .product-card:hover .product-card__img {
+        transform: scale(1.05);
+    }
+
+    /* desktop-এ ♡ hover-এ প্রকাশ; touch device-এ সবসময় দৃশ্যমান */
+    .card-wishlist-btn {
+        opacity: 0;
+        transition: opacity 0.18s ease;
+    }
+
+    .product-card:hover .card-wishlist-btn,
+    .card-wishlist-btn:focus-visible {
+        opacity: 1;
+    }
+}
+
+.card-wishlist-btn {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    color: #5d6b60;
+}
+
+.card-wishlist-btn:hover {
+    color: #c0392b;
+}
+
+/* নাম — সর্বোচ্চ ২ লাইন; দীর্ঘ নামেও grid height ভাঙে না */
+.product-card__name {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.4em;
+}
+
+/* touch device — ♡ সবসময় দৃশ্যমান */
+@media (hover: none) {
+    .card-wishlist-btn {
+        opacity: 1;
+    }
+}
+
+/* ==========================================================================
    Hero — তিনটি গ্রামীণ ছবির একটি অবিচ্ছিন্ন landscape composition
    স্তর: b-image3 (ভিত্তি/গভীরতা) ← b-image1 (কৃষক/ধানক্ষেত, বামে)
         ← b-image2 (বিল/মাছ, ডানে)

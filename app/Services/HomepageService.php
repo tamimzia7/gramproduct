@@ -24,8 +24,12 @@ class HomepageService
     }
 
     /**
-     * কুইক ক্যাটাগরি — মূল-স্তরের সক্রিয় ক্যাটাগরি (sort_order অনুযায়ী),
-     * শুধুমাত্র available পণ্যযুক্তগুলো; একটি aggregate কুয়েরিতে count।
+     * হোমপেজ ক্যাটাগরি সেকশন — সব active top-level ক্যাটাগরি, কোনো সংখ্যা-সীমা নেই।
+     *
+     * - active (is_active = true)
+     * - parent_id = null (শুধু মূল-স্তর; child-রা ক্যাটাগরি পেজে browse হয়)
+     * - existing sort_order অনুযায়ী
+     * - একটি aggregate কুয়েরিতে active-product count (N+1 নেই)
      */
     public function quickCategories(): Collection
     {
@@ -34,23 +38,74 @@ class HomepageService
             ->rootLevel()
             ->ordered()
             ->withCount(['products as products_count' => fn ($query) => $query->active()])
-            ->get()
-            ->filter(fn (Category $category) => $category->products_count > 0)
-            ->take(config('shop.homepage.quick_categories_limit'))
-            ->values();
+            ->get();
     }
 
     /**
-     * বিশেষ পণ্য — active product + active variant, স্টক-অগ্রাধিকারসহ
+     * সেরা পণ্য — merchandising strategy:
+     * ১) featured (স্টক-অগ্রাধিকার) → ২) ধানক্ষেত (rice) fill → ৩) সর্বশেষ বাকিরা।
+     *
+     * Rice-priority config('shop.homepage.sections.rice.slugs') থেকেই আসে —
+     * শতকরা হার বা ID কোথাও hard-code করা নেই; মোট সংখ্যা limit-এ সীমাবদ্ধ।
      */
     public function featuredProducts(): Collection
     {
-        return $this->productQuery()
+        $limit = (int) config('shop.homepage.featured_limit');
+
+        $featured = $this->productQuery()
             ->featured()
             ->orderByRaw("CASE WHEN stock_status = 'out_of_stock' THEN 1 ELSE 0 END")
             ->latest()
-            ->take(config('shop.homepage.featured_limit'))
+            ->take($limit)
             ->get();
+
+        if ($featured->count() >= $limit) {
+            return $featured;
+        }
+
+        $excludeIds = $featured->pluck('id')->all();
+
+        // ২) rice representation — config-mapped category tree
+        $riceCategoryIds = Category::query()
+            ->active()
+            ->whereIn('slug', config('shop.homepage.sections.rice.slugs', []))
+            ->with('children')
+            ->get()
+            ->flatMap(fn (Category $root) => array_merge([$root->id], $root->getDescendantIds()))
+            ->unique()
+            ->values();
+
+        $rice = collect();
+
+        if ($riceCategoryIds->isNotEmpty()) {
+            $rice = $this->productQuery()
+                ->whereHas('category', fn ($query) => $query
+                    ->whereIn('categories.id', $riceCategoryIds)
+                    ->where('categories.is_active', true))
+                ->whereNotIn('id', $excludeIds)
+                ->orderByDesc('is_featured')
+                ->latest()
+                ->take($limit - $featured->count())
+                ->get();
+        }
+
+        $excludeIds = array_merge($excludeIds, $rice->pluck('id')->all());
+
+        // ৩) এখনও ঘাটতি থাকলে সর্বশেষ active পণ্য দিয়ে পূরণ
+        $fill = collect();
+        if ($featured->count() + $rice->count() < $limit) {
+            $fill = $this->productQuery()
+                ->whereNotIn('id', $excludeIds)
+                ->latest()
+                ->take($limit - $featured->count() - $rice->count())
+                ->get();
+        }
+
+        return $featured
+            ->concat($rice)
+            ->concat($fill)
+            ->unique('id')
+            ->values();
     }
 
     /**

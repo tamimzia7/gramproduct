@@ -532,7 +532,8 @@ class InventoryTest extends TestCase
 
         $this->get(route('products.index'))
             ->assertOk()
-            ->assertSee('স্টক কম')
+            // ইনফরমেটিভ low-stock লেবেল — সর্বোচ্চ clarity
+            ->assertSee('মাত্র ৬টি বাকি')
             // পরিচ্ছন্ন ডিজাইন — স্বাভাবিক স্টকে সংখ্যা দেখানো হয় না
             ->assertDontSee('স্টকে আছে');
     }

@@ -15,7 +15,7 @@ return [
     */
 
     'homepage' => [
-        'quick_categories_limit' => 10,
+        // ক্যাটাগরি সেকশনে কোনো সংখ্যা-সীমা নেই — সব active top-level ক্যাটাগরি দেখানো হয়
         'featured_limit' => 8,
 
         'sections' => [

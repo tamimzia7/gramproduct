@@ -572,8 +572,8 @@ class ProductTest extends TestCase
         $this->get(route('products.index'))
             ->assertOk()
             ->assertSee('নতুন')
-            ->assertSee('বিশেষ পণ্য')
-            ->assertSee('সর্বাধিক বিক্রিত')
+            ->assertSee('বিশেষ')
+            ->assertSee('সেরা বিক্রি')
             ->assertSee('মৌসুমি');
     }
 

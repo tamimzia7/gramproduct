@@ -52,34 +52,104 @@ class HomepageTest extends TestCase
             ->assertSee('ক্যাটাগরি দেখুন');
     }
 
-    public function test_homepage_displays_active_featured_categories(): void
+    public function test_homepage_displays_all_active_top_level_categories(): void
     {
-        $visible = $this->makeCategory('chal', ['name' => 'চাল', 'is_featured' => true]);
+        // §1 — কোনো সীমা নেই: ১২টি তৈরি করলে ১২টিই দেখাবে
+        $names = ['চাল', 'মাছ', 'সবজি', 'বীজ', 'ডাল', 'মসলা', 'মধু', 'ফল', 'তেল', 'আচার', 'ঘি', 'অন্যান্য'];
 
-        // খালি ক্যাটাগরি লুকানো হয় — available পণ্যযুক্ত ক্যাটাগরিই দেখায়
-        Product::factory()->create(['name' => 'নাজিরশাইল চাল', 'category_id' => $visible->id]);
-
-        $this->get(route('home'))
-            ->assertOk()
-            ->assertSee($visible->name);
-    }
-
-    public function test_empty_categories_are_hidden_from_homepage(): void
-    {
-        // পণ্যহীন সক্রিয় ক্যাটাগরি — homepage-এর category strip-এ দেখা যায় না (§18)
-        $populated = $this->makeCategory('bhor', ['name' => 'ভরা ক্যাটাগরি', 'is_featured' => true]);
-        Product::factory()->create(['name' => 'ভর্তি পণ্য', 'category_id' => $populated->id]);
-
-        $this->makeCategory('khali', ['name' => 'খালি ক্যাটাগরি', 'is_featured' => true]);
+        foreach ($names as $i => $name) {
+            $this->makeCategory('cat-'.($i + 1), ['name' => $name]);
+        }
 
         $content = $this->get(route('home'))->getContent();
 
-        preg_match('/<section class="category-section">(.*?)<\/section>/s', $content, $matches);
-        $section = $matches[1] ?? '';
+        foreach ($names as $name) {
+            $this->assertStringContainsString($name, $content);
+        }
 
-        // ভরা ক্যাটাগরি আছে, খালিটি নেই
-        $this->assertStringContainsString('ভরা ক্যাটাগরি', $section);
-        $this->assertStringNotContainsString('খালি ক্যাটাগরি', $section);
+        // section header — নতুন শিরোনাম
+        $this->assertStringContainsString('ক্যাটাগরি থেকে কিনুন');
+    }
+
+    public function test_homepage_category_count_is_not_limited(): void
+    {
+        // ১৫টি — config limit (10) থাকলেও সবগুলো দেখাতে হবে
+        foreach (range(1, 15) as $i) {
+            $this->makeCategory('limit-cat-'.$i, ['name' => 'ক্যাটাগরি '.$i]);
+        }
+
+        $section = $this->categorySectionHtml();
+
+        foreach (range(1, 15) as $i) {
+            $this->assertStringContainsString('ক্যাটাগরি '.$i, $section);
+        }
+    }
+
+    public function test_child_categories_do_not_appear_as_homepage_cards(): void
+    {
+        $root = $this->makeCategory('chal', ['name' => 'চাল']);
+        $this->makeCategory('nazirshail', ['name' => 'নাজিরশাইল', 'parent_id' => $root->id]);
+        $this->makeCategory('kataribhog', ['name' => 'কাটারিভোগ', 'parent_id' => $root->id]);
+
+        Product::factory()->create(['name' => 'নাজিরশাইল চাল', 'category_id' => $root->id]);
+
+        $section = $this->categorySectionHtml();
+
+        $this->assertStringContainsString('চাল', $section);
+        $this->assertStringNotContainsString('নাজিরশাইল', $section);
+        $this->assertStringNotContainsString('কাটারিভোগ', $section);
+
+        // parent link → existing category page where children are browsable
+        $this->get(route('categories.show', $root))
+            ->assertOk()
+            ->assertSee('নাজিরশাইল')
+            ->assertSee($this->getRouteProductLinkAssertion());
+    }
+
+    private function getRouteProductLinkAssertion(): string
+    {
+        return 'চাল';
+    }
+
+    public function test_homepage_hides_inactive_categories(): void
+    {
+        $this->makeCategory('hidden-cat', ['name' => 'লুকানো ক্যাটাগরি', 'is_active' => false]);
+        $visible = $this->makeCategory('visible-cat', ['name' => 'দৃশ্যমান ক্যাটাগরি']);
+
+        $section = $this->categorySectionHtml();
+
+        $this->assertStringContainsString($visible->name, $section);
+        $this->assertStringNotContainsString('লুকানো ক্যাটাগরি', $section);
+    }
+
+    public function test_newly_activated_category_appears_automatically(): void
+    {
+        // Admin deactivate → add product → reactivate: homepage auto-reflects
+        $cat = $this->makeCategory('auto-cat', ['name' => 'স্বয়ংক্রিয় ক্যাটাগরি', 'is_active' => false]);
+
+        $this->assertStringNotContainsString(
+            'স্বয়ংক্রিয় ক্যাটাগরি',
+            $this->categorySectionHtml(),
+        );
+
+        $cat->update(['is_active' => true]);
+
+        $this->assertStringContainsString(
+            'স্বয়ংক্রিয় ক্যাটাগরি',
+            $this->categorySectionHtml(),
+        );
+    }
+
+    /**
+     * homepage category strip markup extract
+     */
+    private function categorySectionHtml(): string
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        preg_match('/<section class="category-section">(.*?)<\/section>/s', $content, $matches);
+
+        return $matches[1] ?? '';
     }
 
     public function test_homepage_hides_inactive_categories(): void
@@ -99,9 +169,29 @@ class HomepageTest extends TestCase
 
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('বিশেষ পণ্য')
+            ->assertSee('আমাদের সেরা পণ্য')
             ->assertSee($product->name)
             ->assertSee('কার্টে যোগ করুন');
+    }
+
+    public function test_showcase_represents_rice_alongside_other_products(): void
+    {
+        // rice config-tree + featured non-rice — showcase-এ দুটোই থাকবে
+        $rice = $this->makeCategory('rice-grains', ['name' => 'চাল']);
+        $nonFeaturedRice = Product::factory()->create([
+            'name' => 'সাধারণ চাল',
+            'category_id' => $rice->id,
+            'is_featured' => false,
+        ]);
+        $featuredOther = Product::factory()->create(['name' => 'খাঁটি মধু', 'is_featured' => true]);
+
+        // featured slot (8) পূরণ করার মতো অন্য featured product
+        Product::factory()->count(7)->create(['is_featured' => true]);
+
+        $content = $this->get(route('home'))->getContent();
+
+        $this->assertStringContainsString($featuredOther->name, $content);
+        $this->assertStringContainsString('সাধারণ চাল', $content); // rice fill কাজ করেছে
     }
 
     public function test_homepage_hides_inactive_products(): void
