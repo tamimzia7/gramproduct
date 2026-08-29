@@ -112,7 +112,7 @@ class HomepageService
      * কনফিগ-ম্যাপড সেকশনসমূহ — ক্যাটাগরি/পণ্য না থাকলে সেকশন বাদ যায় (graceful)
      *
      * চাল (rice) সেটিকে ডেডিকেটেড রাইস শোকেসে (riceShowcase) দেখানো হয়;
-     * আমি এখানে তা বাদ দিই যাতে একই পণ্য দুইবার না আসে।
+     * তাই এখানে তা বাদ দেওয়া হয় যাতে একই পণ্য দুইবার না আসে।
      *
      * @return Collection<int, array<string, mixed>>
      */
@@ -129,7 +129,7 @@ class HomepageService
 
     /**
      * ডেডিকেটেড রাইস শোকেস — চাল মূল ক্যাটাগরি (+বংশধর) থেকে active পণ্য,
-     * sopdate child ক্যাটাগরিগুলো quick-link হিসেবে। সম্পূর্ণ slug-ভিত্তিক।
+     * সক্রিয় child ক্যাটাগরিগুলো quick-link হিসেবে। সম্পূর্ণ slug-ভিত্তিক।
      *
      * @return array{rootCategory: Category, children: Collection<int, Category>, products: Collection, productCount: int}|null
      */

@@ -88,7 +88,7 @@
 
     {{-- ======================= Rice Showcase =======================
          চাল — বিশেষ হোমপেজ ফোকাস; সব ডেটা HomepageService থেকে
-         (component নিজে কোনো কুয়েরি চালায় না)। Lib/কনফিগ না থাকলে বাদ। --}}
+         (component নিজে কোনো কুয়েরি চালায় না)। ক্যাটাগরি/কনফিগ না থাকলে বাদ। --}}
     @if (! empty($riceShowcase))
         <x-rice-showcase
                 :products="$riceShowcase['products']"
