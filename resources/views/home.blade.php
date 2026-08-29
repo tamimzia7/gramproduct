@@ -86,6 +86,17 @@
         </section>
     @endif
 
+    {{-- ======================= Rice Showcase =======================
+         চাল — বিশেষ হোমপেজ ফোকাস; সব ডেটা HomepageService থেকে
+         (component নিজে কোনো কুয়েরি চালায় না)। Lib/কনফিগ না থাকলে বাদ। --}}
+    @if (! empty($riceShowcase))
+        <x-rice-showcase
+                :products="$riceShowcase['products']"
+                :categories="$riceShowcase['children']"
+                :root-category="$riceShowcase['rootCategory']"
+                :product-count="$riceShowcase['productCount']" />
+    @endif
+
     {{-- ==================== Dynamic collection sections ==================== --}}
     @foreach ($sections as $section)
         <section class="py-5 {{ $loop->even ? 'bg-light' : '' }}">

@@ -18,6 +18,16 @@ return [
         // ক্যাটাগরি সেকশনে কোনো সংখ্যা-সীমা নেই — সব active top-level ক্যাটাগরি দেখানো হয়
         'featured_limit' => 8,
 
+        // ডেডিকেটেড রাইস শোকেস — চাল সেকশন
+        'rice_showcase' => [
+            'slugs' => ['rice-grains'],
+            'title' => 'আমাদের চাল',
+            'subtitle' => 'গ্রামের মিল থেকে বাছাই করা মানসম্মত বিভিন্ন ধরনের চাল',
+            'view_all' => 'সব চাল দেখুন',
+            'all_filter' => 'সব চাল',
+            'limit' => 6,
+        ],
+
         'sections' => [
             'rice' => [
                 'slugs' => ['rice-grains'],

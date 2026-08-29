@@ -19,6 +19,7 @@ class HomeController extends Controller
         return view('home', [
             'quickCategories' => $this->homepageService->quickCategories(),
             'featuredProducts' => $this->homepageService->featuredProducts(),
+            'riceShowcase' => $this->homepageService->riceShowcase(),
             'sections' => $this->homepageService->sections(),
         ]);
     }

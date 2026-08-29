@@ -377,6 +377,88 @@ main {
     }
 }
 
+/* ==========================================================================
+   RICE SHOWCASE — ডেডিকেটেড চাল সেকশন
+   পরিষ্কার হালকা পটভূমি; product card-ই ভিজ্যুয়াল ফোকাস।
+   Quick-link pills mobile-এ horizontal swipe — একই category-strip প্যাটার্ন।
+   ========================================================================== */
+
+.rice-showcase {
+    background: #fbfdf9;
+    border-top: 1px solid #eef3ea;
+    border-bottom: 1px solid #eef3ea;
+}
+
+.rice-showcase__view-all-lg {
+    white-space: nowrap;
+}
+
+/* Pills — default: horizontal swipe (mobile) */
+.rice-showcase__filters {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+}
+
+.rice-showcase__filters::-webkit-scrollbar {
+    display: none;
+}
+
+.rice-showcase__pill {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    padding: 7px 16px;
+    border-radius: 999px;
+    background: #ffffff;
+    border: 1px solid #dce7d8;
+    color: #3c5c3f;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+        background 0.18s ease,
+        color 0.18s ease,
+        border-color 0.18s ease;
+}
+
+.rice-showcase__pill:hover,
+.rice-showcase__pill:focus-visible {
+    background: #eef6ea;
+    border-color: #9bc793;
+    color: #1f5b1f;
+    text-decoration: none;
+}
+
+.rice-showcase__pill--active {
+    background: #2f7d32;
+    border-color: #2f7d32;
+    color: #ffffff;
+}
+
+.rice-showcase__pill--active:hover {
+    background: #256a28;
+    color: #ffffff;
+}
+
+@media (hover: hover) {
+    .rice-showcase__pill:focus-visible {
+        outline: 2px solid #2f7d32;
+        outline-offset: 2px;
+    }
+}
+
+/* ---------- প্রতিক্রিয়াশীল — desktop-এ pill-গুলো wrap হয় ---------- */
+@media (min-width: 768px) {
+    .rice-showcase__filters {
+        flex-wrap: wrap;
+        overflow-x: visible;
+    }
+}
+
 /* ---------- Mobile — desktop shrink নয়, নিজস্ব composition ---------- */
 @media (max-width: 575.98px) {
     .hero-scene {

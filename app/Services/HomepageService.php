@@ -111,14 +111,82 @@ class HomepageService
     /**
      * কনফিগ-ম্যাপড সেকশনসমূহ — ক্যাটাগরি/পণ্য না থাকলে সেকশন বাদ যায় (graceful)
      *
+     * চাল (rice) সেটিকে ডেডিকেটেড রাইস শোকেসে (riceShowcase) দেখানো হয়;
+     * আমি এখানে তা বাদ দিই যাতে একই পণ্য দুইবার না আসে।
+     *
      * @return Collection<int, array<string, mixed>>
      */
     public function sections(): Collection
     {
-        return collect(config('shop.homepage.sections'))
+        $excludingRice = collect(config('shop.homepage.sections'))
+            ->except('rice')
             ->map(fn (array $config, string $key) => $this->section($key))
             ->filter()
             ->values();
+
+        return $excludingRice;
+    }
+
+    /**
+     * ডেডিকেটেড রাইস শোকেস — চাল মূল ক্যাটাগরি (+বংশধর) থেকে active পণ্য,
+     * sopdate child ক্যাটাগরিগুলো quick-link হিসেবে। সম্পূর্ণ slug-ভিত্তিক।
+     *
+     * @return array{rootCategory: Category, children: Collection<int, Category>, products: Collection, productCount: int}|null
+     */
+    public function riceShowcase(): ?array
+    {
+        $config = config('shop.homepage.rice_showcase');
+
+        if (! $config || empty($config['slugs'])) {
+            return null;
+        }
+
+        // এক কুয়েরিতে মূল রাইস ক্যাটাগরি — child-রা eager-loaded
+        $roots = Category::query()
+            ->active()
+            ->whereIn('slug', $config['slugs'])
+            ->with('children')
+            ->get();
+
+        if ($roots->isEmpty()) {
+            return null;
+        }
+
+        $root = $roots->first();
+
+        $categoryIds = array_merge([$root->id], $root->getDescendantIds());
+
+        // quick-link-এর জন্য শুধুমাত্র active child ক্যাটাগরি
+        $children = $root->children
+            ->filter(fn (Category $child) => $child->is_active)
+            ->values();
+
+        $products = $this->productQuery()
+            ->whereHas('category', fn ($query) => $query
+                ->whereIn('categories.id', $categoryIds)
+                ->where('categories.is_active', true))
+            ->orderByDesc('is_featured')
+            ->latest()
+            ->take((int) $config['limit'])
+            ->get();
+
+        if ($products->isEmpty()) {
+            return null;
+        }
+
+        $productCount = Product::query()
+            ->active()
+            ->whereHas('category', fn ($query) => $query
+                ->whereIn('categories.id', $categoryIds)
+                ->where('categories.is_active', true))
+            ->count();
+
+        return [
+            'rootCategory' => $root,
+            'children' => $children,
+            'products' => $products,
+            'productCount' => $productCount,
+        ];
     }
 
     /**
