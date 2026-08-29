@@ -141,6 +141,18 @@ class HomepageTest extends TestCase
         return $matches[1] ?? '';
     }
 
+    /**
+     * rice showcase section markup extract
+     */
+    private function riceShowcaseSectionHtml(): string
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        preg_match('/<section class="rice-showcase.*?<\/section>/s', $content, $matches);
+
+        return $matches[1] ?? '';
+    }
+
     public function test_homepage_hides_inactive_categories(): void
     {
         $this->makeCategory('hidden-cat', ['name' => 'লুকানো ক্যাটাগরি', 'is_featured' => true, 'is_active' => false]);
@@ -207,6 +219,76 @@ class HomepageTest extends TestCase
             ->assertOk()
             ->assertSee('আমাদের চাল')
             ->assertSee($product->name);
+    }
+
+    public function test_rice_showcase_renders_child_quick_links_and_view_all(): void
+    {
+        $rice = $this->makeCategory('rice-grains', ['name' => 'চাল ও ডাল']);
+        $kataribhog = $this->makeCategory('kataribhog-rice', ['name' => 'কাটারিভোগ', 'parent_id' => $rice->id]);
+        $brown = $this->makeCategory('brown-rice', ['name' => 'লাল চাল', 'parent_id' => $rice->id]);
+
+        Product::factory()->create(['name' => 'কাটারিভোগ চাল', 'category_id' => $kataribhog->id]);
+        Product::factory()->create(['name' => 'লাল চাল', 'category_id' => $brown->id]);
+
+        $content = $this->get(route('home'))->assertOk()->getContent();
+
+        // শিরোনাম + view-all link (root ক্যাটাগরি পেজে)
+        $this->assertStringContainsString('আমাদের চাল', $content);
+        $this->assertStringContainsString('সব চাল দেখুন', $content);
+        $this->assertStringContainsString(route('categories.show', $rice), $content);
+
+        // child quick-links — dynamic, DB-driven
+        $this->assertStringContainsString('কাটারিভোগ', $content);
+        $this->assertStringContainsString(route('categories.show', $kataribhog), $content);
+        $this->assertStringContainsString('লাল চাল', $content);
+        $this->assertStringContainsString(route('categories.show', $brown), $content);
+
+        // both products present
+        $this->assertStringContainsString('কাটারিভোগ চাল', $content);
+        $this->assertStringContainsString('লাল চাল', $content);
+    }
+
+    public function test_rice_showcase_dynamic_product_count_is_calculated(): void
+    {
+        $rice = $this->makeCategory('rice-grains', ['name' => 'চাল ও ডাল']);
+        $child = $this->makeCategory('kataribhog-rice', ['name' => 'কাটারিভোগ', 'parent_id' => $rice->id]);
+
+        Product::factory()->count(3)->create(['name' => 'চাল পণ্য', 'category_id' => $child->id]);
+
+        $content = $this->get(route('home'))->assertOk()->getContent();
+
+        // সংখ্যা ডায়নামিক — fake নয়
+        $this->assertStringContainsString('৩ ধরনের চাল', $content);
+    }
+
+    public function test_rice_showcase_inactive_child_category_products_not_shown(): void
+    {
+        $rice = $this->makeCategory('rice-grains', ['name' => 'চাল ও ডাল']);
+        $activeChild = $this->makeCategory('kataribhog-rice', ['name' => 'কাটারিভোগ', 'parent_id' => $rice->id]);
+        $inactiveChild = $this->makeCategory('brown-rice', ['name' => 'লুকানো চাল', 'parent_id' => $rice->id, 'is_active' => false]);
+
+        Product::factory()->create(['name' => 'দৃশ্যমান চাল', 'category_id' => $activeChild->id]);
+        Product::factory()->create(['name' => 'লুকানো পণ্য', 'category_id' => $inactiveChild->id]);
+
+        $riceSection = $this->riceShowcaseSectionHtml();
+
+        $this->assertStringContainsString('আমাদের চাল', $riceSection);
+        $this->assertStringContainsString('দৃশ্যমান চাল', $riceSection);
+        $this->assertStringNotContainsString('লুকানো পণ্য', $riceSection);
+
+        // inactive child-এর quick link নেই
+        $this->assertStringNotContainsString(route('categories.show', $inactiveChild), $riceSection);
+    }
+
+    public function test_rice_showcase_hidden_without_active_products(): void
+    {
+        // root exists but no active products → section hidden entirely
+        $this->makeCategory('rice-grains', ['name' => 'চাল ও ডাল']);
+
+        $content = $this->get(route('home'))->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('আমাদের চাল', $content);
+        $this->assertStringNotContainsString('সব চাল দেখুন', $content);
     }
 
     public function test_section_is_hidden_gracefully_without_matching_category(): void

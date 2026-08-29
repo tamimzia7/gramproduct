@@ -19,8 +19,9 @@
                 <p class="text-muted mb-0">
                     {{ $subtitle }}
                     @if ($productCount !== null && $productCount > 0)
-                        <span class="text-success fw-semibold">
-                            · {{ \App\Support\BengaliNumber::format($productCount) }} ধরনের চাল
+                        <span class="d-inline-flex align-items-center gap-1 text-success fw-semibold">
+                            <span aria-hidden="true">·</span>
+                            {{ \App\Support\BengaliNumber::format($productCount) }} ধরনের চাল
                         </span>
                     @endif
                 </p>
