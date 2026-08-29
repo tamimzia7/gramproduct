@@ -148,9 +148,17 @@ class HomepageTest extends TestCase
     {
         $content = $this->get(route('home'))->getContent();
 
-        preg_match('/<section class="rice-showcase.*?<\/section>/s', $content, $matches);
+        $start = strpos($content, '<section class="rice-showcase');
+        if ($start === false) {
+            return '';
+        }
 
-        return $matches[1] ?? '';
+        $end = strpos($content, '</section>', $start);
+        if ($end === false) {
+            return '';
+        }
+
+        return substr($content, $start, $end - $start + strlen('</section>'));
     }
 
     public function test_homepage_hides_inactive_categories(): void
