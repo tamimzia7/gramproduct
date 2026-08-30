@@ -742,3 +742,269 @@ main {
         animation: none;
     }
 }
+
+/* ==========================================================================
+   CUSTOMER REVIEWS / TESTIMONIALS — "ক্রেতারা কী বলছেন?"
+   হালকা, বিশ্বস্ত ডিজাইন। scroll-snap slider + আগে/পরের বোতাম + কিবোর্ড।
+   শুধুই বাস্তব অ্যাপ্রুভড রিভিউ — কোনো ফেক তথ্য নেই।
+   ========================================================================== */
+
+.testimonials-section {
+    background: #f7faf4;
+    border-top: 1px solid #eaf0e6;
+    border-bottom: 1px solid #eaf0e6;
+}
+
+.testimonial-card {
+    border: 1px solid #e4ecd9;
+    border-radius: 1rem;
+    box-shadow: 0 1px 2px rgba(47, 125, 50, 0.04);
+    background: #ffffff;
+}
+
+.testimonial-card__text {
+    color: #44503a;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+.testimonial-card__rating {
+    color: #e8a33d;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.testimonial-card__rating-value {
+    margin-left: 6px;
+    color: #2f7d32;
+    font-weight: 700;
+}
+
+.testimonial-card__avatar {
+    width: 40px;
+    height: 40px;
+    background: #e3f0dc;
+    color: #2f7d32;
+    font-weight: 700;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.testimonial-card__meta {
+    min-width: 0;
+}
+
+.testimonial-card__name,
+.testimonial-card__product {
+    overflow-wrap: anywhere;
+}
+
+.testimonial-card__verified {
+    white-space: nowrap;
+}
+
+/* ---------- slider ---------- */
+.testimonials-slider__track {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 4px 46px 10px;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+}
+
+.testimonials-slider__track::-webkit-scrollbar {
+    display: none;
+}
+
+.testimonials-slider__slide {
+    flex: 0 0 100%;
+    min-width: 0;
+    scroll-snap-align: start;
+}
+
+@media (min-width: 576px) {
+    .testimonials-slider__slide {
+        flex-basis: calc(50% - 8px);
+    }
+}
+
+@media (min-width: 992px) {
+    .testimonials-slider__slide {
+        flex-basis: calc(33.3333% - 10.67px);
+    }
+}
+
+@media (min-width: 1200px) {
+    .testimonials-slider__slide {
+        flex-basis: calc(25% - 12px);
+    }
+}
+
+.testimonials-slider__nav {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #dcead5;
+    background: #ffffff;
+    color: #2f7d32;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(47, 125, 50, 0.1);
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.testimonials-slider__nav:hover,
+.testimonials-slider__nav:focus-visible {
+    background: #2f7d32;
+    border-color: #2f7d32;
+    color: #ffffff;
+}
+
+.testimonials-slider__nav:focus-visible {
+    outline: 2px solid #2f7d32;
+    outline-offset: 2px;
+}
+
+.testimonials-slider__nav[hidden] {
+    display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .testimonials-slider__track {
+        scroll-behavior: auto;
+    }
+}
+
+/* ==========================================================================
+   HOW IT WORKS / ORDER PROCESS — "কীভাবে অর্ডার করবেন?"
+   ৪টি সহজ ধাপ। স্ট্যাটিক lang-ড্রiven (কোনো DB/JS নেই)। ডেস্কটপে horizontal
+   connecting line, ট্যাবলেটে ২×২, মোবাইলে ১ কলাম + সরল vertical flow।
+   ========================================================================== */
+
+.order-process {
+    background: #f9fcf7;
+    border-top: 1px solid #edf3e8;
+    border-bottom: 1px solid #edf3e8;
+}
+
+/* ধাপের নম্বর-ব্যাজের উচ্চতায় horizontal connecting line (lg+ হলেই দেখায়) */
+.order-process__flow {
+    position: absolute;
+    top: 41px;
+    left: 12%;
+    right: 12%;
+    border-top: 2px dashed #cfe0c5;
+    display: none;
+    pointer-events: none;
+}
+
+@media (min-width: 992px) {
+    .order-process__flow {
+        display: block;
+    }
+}
+
+.order-step {
+    border: 1px solid #e4ecd9;
+    border-radius: 1rem;
+    box-shadow: 0 1px 2px rgba(47, 125, 50, 0.04);
+    background: #ffffff;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+    animation: order-step-in 0.22s ease-out both;
+}
+
+.order-process .row > .col:nth-child(2) .order-step {
+    animation-delay: 0.06s;
+}
+
+.order-process .row > .col:nth-child(3) .order-step {
+    animation-delay: 0.12s;
+}
+
+.order-process .row > .col:nth-child(4) .order-step {
+    animation-delay: 0.18s;
+}
+
+.order-step:hover {
+    border-color: #dcead5;
+    box-shadow: 0 6px 18px rgba(47, 125, 50, 0.1);
+    transform: translateY(-2px);
+}
+
+.order-step:focus-visible {
+    outline: 2px solid #2f7d32;
+    outline-offset: 2px;
+}
+
+.order-step__number {
+    width: 36px;
+    height: 36px;
+    background: #2f7d32;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.order-step__icon {
+    width: 56px;
+    height: 56px;
+    background: #eef6ea;
+    color: #2f7d32;
+    font-size: 1.45rem;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.order-step:hover .order-step__icon {
+    background: #2f7d32;
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+@keyframes order-step-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* মোবাইলে (এক কলাম) ধাপের নিচে ছোট vertical dashed connector */
+@media (max-width: 575.98px) {
+    .order-process__col:not(:last-child)::after {
+        content: '';
+        width: 2px;
+        height: 24px;
+        background: repeating-linear-gradient(to bottom, #cfe0c5 0 4px, transparent 4px 8px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .order-step,
+    .order-step__icon {
+        animation: none;
+        transition: none;
+        transform: none;
+    }
+}

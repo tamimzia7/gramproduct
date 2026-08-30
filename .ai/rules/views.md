@@ -11,3 +11,6 @@ Every UI string (labels, buttons, notifications, errors, validation messages, co
 
 ## Homepage ends with Trust section before footer
 Homepage section order (settled): Hero → Categories → Main products → চাল → তাজা মাছ → dynamic sections → Trust ("কেন আমাদের কাছ থেকে কিনবেন?") → Footer. The old Promotional Banner, plain Trust strip, and CTA sections were intentionally removed; do not re-add them. lang keys home.promo / home.trust / home.cta were deleted accordingly.
+
+## Homepage section order now ends with Order Process
+Settled homepage section order: Hero → All Categories → Main products → চাল → তাজা মাছ → dynamic sections → Trust ("কেন আমাদের কাছ থেকে কিনবেন?") → Our Story ("গ্রাম থেকে আপনার ঘরে") → Testimonials (hidden unless approved reviews exist) → Order Process ("কীভাবে অর্ডার করবেন?") → Footer. Old Promotional Banner/Trust strip/CTA sections were removed; do not re-add.

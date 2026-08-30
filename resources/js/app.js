@@ -230,3 +230,81 @@ import 'bootstrap';
         }
     });
 })();
+
+// ---------- ক্রেতার মতামত slider ----------
+// হালকা, লাইব্রেরি-মুক্ত scroll-snap slider। কিবোর্ড (ArrowLeft/Right),
+// আগে/পরের বোতাম, hover/focus-এ pause, prefers-reduced-motion-এ auto-play বন্ধ।
+(function () {
+    const slider = document.querySelector('[data-testimonials-slider]');
+    if (! slider) return;
+
+    const track = slider.querySelector('[data-testimonials-track]');
+    const prevButton = slider.querySelector('[data-testimonials-prev]');
+    const nextButton = slider.querySelector('[data-testimonials-next]');
+    if (! track || ! prevButton || ! nextButton) return;
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const step = () => {
+        const slide = track.querySelector('.testimonials-slider__slide');
+        return slide ? slide.getBoundingClientRect().width : track.clientWidth;
+    };
+
+    const scrollByStep = (direction) => {
+        track.scrollBy({ left: direction * step(), behavior: reducedMotion ? 'auto' : 'smooth' });
+    };
+
+    const hasOverflow = () => track.scrollWidth > track.clientWidth + 1;
+
+    const updateNavState = () => {
+        const maxScroll = track.scrollWidth - track.clientWidth;
+        prevButton.hidden = ! hasOverflow() || track.scrollLeft <= 1;
+        nextButton.hidden = ! hasOverflow() || track.scrollLeft >= maxScroll - 1;
+    };
+
+    prevButton.addEventListener('click', () => scrollByStep(-1));
+    nextButton.addEventListener('click', () => scrollByStep(1));
+    track.addEventListener('scroll', updateNavState, { passive: true });
+    window.addEventListener('resize', updateNavState);
+    updateNavState();
+
+    // কিবোর্ড নেভিগেশন — focus track-এ থাকা অবস্থায়
+    track.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            scrollByStep(-1);
+        } else if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            scrollByStep(1);
+        }
+    });
+
+    // Auto-play — মৃদু (৫ সেকেন্ড), hover/focus-এ pause, reduced-motion বন্ধ
+    if (reducedMotion || ! hasOverflow()) return;
+
+    let timer = null;
+
+    const stop = () => {
+        if (timer) {
+            clearInterval(timer);
+            timer = null;
+        }
+    };
+
+    const start = () => {
+        stop();
+        timer = window.setInterval(() => {
+            if (track.scrollLeft >= track.scrollWidth - track.clientWidth - 1) {
+                track.scrollTo({ left: 0, behavior: 'smooth' });
+            } else {
+                scrollByStep(1);
+            }
+        }, 5000);
+    };
+
+    slider.addEventListener('mouseenter', stop);
+    slider.addEventListener('mouseleave', start);
+    slider.addEventListener('focusin', stop);
+    slider.addEventListener('focusout', start);
+    start();
+})();

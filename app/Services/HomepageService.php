@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 class HomepageService
@@ -253,6 +254,32 @@ class HomepageService
             'category' => $roots->first(),
             'products' => $products,
         ];
+    }
+
+    /**
+     * ক্রেতার মতামত — শুধুমাত্র অ্যাপ্রুভড/প্রকাশিত রিভিউ (moderation সাপেক্ষে)।
+     *
+     * রিভিউ সিস্টেম এখনো নেই (কোনো Review model/table নেই), তাই বর্তমানে খালি
+     * collection ফেরত দেয় এবং হোমপেজে সেকশন দেখানো হয় না। ভবিষ্যতে রিভিউ
+     * সিস্টেম যোগ হলে এই নির্দিষ্ট কুয়েরি স্বয়ংক্রিয়ভাবে কাজ শুরু করবে।
+     * কখনোই কৃত্রিম/ফেক রিভিউ বা নাম তৈরি করা হয় না।
+     *
+     * @return Collection<int, Model>
+     */
+    public function testimonials(): Collection
+    {
+        $reviewClass = 'App\Models\Review';
+
+        if (! class_exists($reviewClass)) {
+            return collect();
+        }
+
+        return $reviewClass::query()
+            ->approved()
+            ->with(['product:id,name,slug'])
+            ->latest()
+            ->take((int) config('shop.homepage.review_limit', 6))
+            ->get();
     }
 
     /**

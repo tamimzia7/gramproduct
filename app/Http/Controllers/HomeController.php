@@ -22,6 +22,7 @@ class HomeController extends Controller
             'riceShowcase' => $this->homepageService->riceShowcase(),
             'fishShowcase' => $this->homepageService->fishShowcase(),
             'sections' => $this->homepageService->sections(),
+            'reviews' => $this->homepageService->testimonials(),
         ]);
     }
 

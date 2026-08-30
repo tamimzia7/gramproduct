@@ -156,4 +156,16 @@
             :cta-label="__('home.story.cta_about')"
             :products-url="route('products.index')"
             :products-label="__('home.story.cta_products')" />
+
+    {{-- ==================== Customer Reviews / Testimonials ====================
+         শুধুই বাস্তব অ্যাপ্রুভড রিভিউ — কোনো ফেক তথ্য নেই। রিভিউ সিস্টেম না
+         থাকায় (অথবা অ্যাপ্রুভড রিভিউ না থাকায়) সম্পূর্ণ সেকশনটা বাদ যায়। --}}
+    @if ($reviews->isNotEmpty())
+        <x-testimonials-section :reviews="$reviews" />
+    @endif
+
+    {{-- ==================== How It Works / Order Process ====================
+         "কীভাবে অর্ডার করবেন?" — ৪টি সহজ ধাপ। স্ট্যাটিক lang-ড্রiven
+         (কোনো DB/JS নেই); ডেলিভারি সময়ের প্রতিশ্রুতি দেওয়া হয় না। --}}
+    <x-order-process />
 </x-layouts.app>

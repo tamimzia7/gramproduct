@@ -8,6 +8,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Support\BengaliNumber;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -832,6 +833,194 @@ class HomepageTest extends TestCase
         $content = $this->get(route('home'))->getContent();
 
         $start = strpos($content, '<section class="our-story');
+        if ($start === false) {
+            return '';
+        }
+
+        $end = strpos($content, '</section>', $start);
+        if ($end === false) {
+            return '';
+        }
+
+        return substr($content, $start, $end - $start + strlen('</section>'));
+    }
+
+    // ===================== Testimonials / Reviews =====================
+
+    public function test_homepage_hides_testimonial_section_without_approved_reviews(): void
+    {
+        // কোনো রিভিউ সিস্টেম/অ্যাপ্রুভড রিভিউ নেই → সেকশন একেবারেই দেখানো হয় না
+        $content = $this->get(route('home'))
+            ->assertOk()
+            ->getContent();
+
+        foreach (['ক্রেতারা কী বলছেন?', 'testimonials-section', 'যাচাইকৃত ক্রেতা', 'আগের মতামত', 'পরের মতামত', '★★★★'] as $needle) {
+            $this->assertStringNotContainsString($needle, $content, "Unexpected \"{$needle}\" on empty homepage.");
+        }
+    }
+
+    public function test_testimonial_card_renders_real_review_data(): void
+    {
+        $html = Blade::render('<x-testimonial-card :review=$review />', [
+            'review' => [
+                'name' => 'মোঃ রফিকুল ইসলাম',
+                'rating' => 4.8,
+                'body' => 'খুব চমৎকার পণ্য, দ্রুত ডেলিভারি।',
+                'product_name' => 'নাজিরশাইল চাল',
+                'verified' => true,
+            ],
+        ]);
+
+        $this->assertStringContainsString('মোঃ রফিকুল ইসলাম', $html);
+        $this->assertStringContainsString('৪.৮', $html);
+        $this->assertStringContainsString('খুব চমৎকার পণ্য, দ্রুত ডেলিভারি।', $html);
+        $this->assertStringContainsString('পণ্য: নাজিরশাইল চাল', $html);
+        $this->assertStringContainsString('যাচাইকৃত ক্রেতা', $html);
+        $this->assertStringContainsString('bi-star-fill', $html);
+        $this->assertStringContainsString('bi-star-half', $html);
+    }
+
+    public function test_testimonial_verified_badge_only_when_confirmed(): void
+    {
+        $verified = Blade::render('<x-testimonial-card :review=$review />', [
+            'review' => ['name' => 'আলী', 'rating' => 5, 'body' => 'ভালো', 'verified' => true],
+        ]);
+
+        $notVerified = Blade::render('<x-testimonial-card :review=$review />', [
+            'review' => ['name' => 'আলী', 'rating' => 5, 'body' => 'ভালো', 'verified' => false],
+        ]);
+
+        $this->assertStringContainsString('যাচাইকৃত ক্রেতা', $verified);
+        $this->assertStringNotContainsString('যাচাইকৃত ক্রেতা', $notVerified);
+    }
+
+    public function test_testimonial_component_escapes_user_generated_review_text(): void
+    {
+        $html = Blade::render('<x-testimonial-card :review=$review />', [
+            'review' => [
+                'name' => '<b>x</b>',
+                'rating' => null,
+                'body' => '<script>alert(1)</script>বাকি টেক্সট',
+                'product_name' => null,
+                'verified' => false,
+            ],
+        ]);
+
+        $this->assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $html);
+        $this->assertStringNotContainsString('<script>alert(1)</script>', $html);
+        $this->assertStringContainsString('&lt;b&gt;x&lt;/b&gt;', $html);
+        // রেটিং না থাকলে কোনো সংখ্যা/তারকা ভ্যালু দেখানো হয় না
+        $this->assertStringNotContainsString('এর মধ্যে ৫', $html);
+    }
+
+    public function test_testimonials_section_renders_slider_with_bengali_labels(): void
+    {
+        $reviews = collect([
+            ['name' => 'ক্রেতা ১', 'rating' => 5, 'body' => 'প্রথম মতামত', 'verified' => false],
+            ['name' => 'ক্রেতা ২', 'rating' => 4, 'body' => 'দ্বিতীয় মতামত', 'verified' => true],
+        ]);
+
+        $html = Blade::render('<x-testimonials-section :reviews=$reviews />', ['reviews' => $reviews]);
+
+        $this->assertStringContainsString('ক্রেতারা কী বলছেন?', $html);
+        $this->assertStringContainsString('আমাদের পণ্য ও সেবা নিয়ে ক্রেতাদের অভিজ্ঞতা', $html);
+        $this->assertStringContainsString('data-testimonials-slider', $html);
+        $this->assertStringContainsString('aria-label="আগের মতামত"', $html);
+        $this->assertStringContainsString('aria-label="পরের মতামত"', $html);
+        $this->assertStringContainsString('role="list"', $html);
+        $this->assertStringContainsString('প্রথম মতামত', $html);
+        $this->assertStringContainsString('দ্বিতীয় মতামত', $html);
+    }
+
+    // ===================== How It Works / Order Process =====================
+
+    public function test_order_process_section_renders_bengali_content(): void
+    {
+        $content = $this->get(route('home'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('কীভাবে অর্ডার করবেন?', $content);
+        $this->assertStringContainsString('কয়েকটি সহজ ধাপেই আপনার পছন্দের পণ্য অর্ডার করুন।', $content);
+
+        foreach ([
+            '০১' => ['পণ্য বেছে নিন', 'আপনার পছন্দের চাল, মাছ, সবজি ও অন্যান্য পণ্য নির্বাচন করুন।'],
+            '০২' => ['কার্টে যোগ করুন', 'প্রয়োজনীয় পণ্য ও পরিমাণ নির্বাচন করে কার্টে যোগ করুন।'],
+            '০৩' => ['অর্ডার নিশ্চিত করুন', 'আপনার ঠিকানা ও প্রয়োজনীয় তথ্য দিয়ে অর্ডার সম্পন্ন করুন।'],
+            '০৪' => ['পণ্য গ্রহণ করুন', 'অর্ডার প্রস্তুত হওয়ার পর আপনার নির্বাচিত ঠিকানায় পণ্য পৌঁছে দেওয়া হবে।'],
+        ] as $number => [$title, $description]) {
+            $this->assertStringContainsString($number, $content, "Missing step number {$number}.");
+            $this->assertStringContainsString($title, $content, "Missing step title {$title}.");
+            $this->assertStringContainsString($description, $content, "Missing step description {$title}.");
+        }
+
+        $this->assertStringContainsString('পণ্য দেখতে যান', $content);
+        $this->assertStringContainsString(route('products.index'), $content);
+    }
+
+    public function test_order_process_renders_four_steps_in_responsive_grid(): void
+    {
+        $section = $this->orderProcessSectionHtml();
+
+        $this->assertSame(4, substr_count($section, 'order-step__number'));
+        $this->assertStringContainsString('row-cols-lg-4', $section);
+        $this->assertStringContainsString('row-cols-sm-2', $section);
+        $this->assertStringContainsString('order-process__flow', $section);
+
+        foreach (['bi-search', 'bi-cart-plus', 'bi-check2-circle', 'bi-box2'] as $icon) {
+            $this->assertStringContainsString($icon, $section);
+        }
+    }
+
+    public function test_order_process_placed_after_story(): void
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        $order = strpos($content, 'কীভাবে অর্ডার করবেন?');
+        $story = strpos($content, 'গ্রাম থেকে আপনার ঘরে');
+        $this->assertNotFalse($order, 'Order Process heading not found.');
+        $this->assertNotFalse($story, 'Story heading not found.');
+        $this->assertGreaterThan($story, $order);
+    }
+
+    public function test_order_process_makes_no_delivery_time_or_delivery_fee_promises(): void
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        foreach (['২৪ ঘণ্টা', '২৪ ঘন্টা', 'ফ্রি ডেলিভারি', '১০০% নিরাপদ', 'আজই পৌঁছে', '১ দিনে পৌঁছে', 'সারাদেশে ফ্রি'] as $claim) {
+            $this->assertStringNotContainsString($claim, $content, "Unsupported claim found: {$claim}");
+        }
+
+        // সময়ের প্রতিশ্রুতি ছাড়া সাধারণ ডেলিভারি ভাষা
+        $this->assertStringContainsString('আপনার নির্বাচিত ঠিকানায় পণ্য পৌঁছে দেওয়া হবে।', $content);
+    }
+
+    public function test_order_step_component_renders_bengali_number_and_icon(): void
+    {
+        $html = Blade::render(
+            '<x-order-step :number="$number" :icon="$icon" :title="$title" :description="$description" />',
+            [
+                'number' => 1,
+                'icon' => 'bi-search',
+                'title' => 'পণ্য বেছে নিন',
+                'description' => 'আপনার পছন্দের চাল, মাছ, সবজি ও অন্যান্য পণ্য নির্বাচন করুন।',
+            ],
+        );
+
+        $this->assertStringContainsString('০১', $html);
+        $this->assertStringContainsString('bi-search', $html);
+        $this->assertStringContainsString('পণ্য বেছে নিন', $html);
+        $this->assertStringContainsString('aria-hidden="true"', $html);
+    }
+
+    /**
+     * order process section markup extract
+     */
+    private function orderProcessSectionHtml(): string
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        $start = strpos($content, '<section class="order-process');
         if ($start === false) {
             return '';
         }
