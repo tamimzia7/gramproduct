@@ -44,6 +44,8 @@ class LoginController extends Controller
 
         $this->cartService->mergeGuestCart($guestSessionId, $user);
 
-        return redirect()->intended(route('home'));
+        return redirect()->intended(
+            $user->hasAnyRole() ? route('admin.dashboard') : route('home')
+        );
     }
 }
