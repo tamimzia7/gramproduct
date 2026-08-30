@@ -20,6 +20,7 @@ class HomeController extends Controller
             'quickCategories' => $this->homepageService->quickCategories(),
             'featuredProducts' => $this->homepageService->featuredProducts(),
             'riceShowcase' => $this->homepageService->riceShowcase(),
+            'fishShowcase' => $this->homepageService->fishShowcase(),
             'sections' => $this->homepageService->sections(),
         ]);
     }

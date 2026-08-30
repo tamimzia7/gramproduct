@@ -503,3 +503,242 @@ main {
         background: rgba(255, 255, 255, 0.9);
     }
 }
+
+/* ==========================================================================
+   FRESH FISH SHOWCASE — ডেডিকেটেড তাজা মাছ সেকশন
+   পানির হালকা নীলাভ শেড; product card-ই ভিজ্যুয়াল ফোকাস।
+   Quick-link pills mobile-এ horizontal swipe — rice-showcase প্যাটার্ন।
+   ========================================================================== */
+
+.fish-showcase {
+    background: linear-gradient(180deg, #f2fafd 0%, #ffffff 100%);
+    border-top: 1px solid #e8f1f4;
+    border-bottom: 1px solid #e8f1f4;
+}
+
+.fish-showcase__view-all-lg {
+    white-space: nowrap;
+}
+
+.fish-showcase__wave {
+    color: #0d7a8f;
+    flex-shrink: 0;
+}
+
+/* Pills — default: horizontal swipe (mobile) */
+.fish-showcase__filters {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+}
+
+.fish-showcase__filters::-webkit-scrollbar {
+    display: none;
+}
+
+.fish-showcase__pill {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    padding: 7px 16px;
+    border-radius: 999px;
+    background: #ffffff;
+    border: 1px solid #d3e6ee;
+    color: #2d5f73;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+        background 0.18s ease,
+        color 0.18s ease,
+        border-color 0.18s ease;
+}
+
+.fish-showcase__pill:hover,
+.fish-showcase__pill:focus-visible {
+    background: #e7f3f8;
+    border-color: #8fc3d8;
+    color: #0f5d75;
+    text-decoration: none;
+}
+
+.fish-showcase__pill--active {
+    background: #0d7a8f;
+    border-color: #0d7a8f;
+    color: #ffffff;
+}
+
+.fish-showcase__pill--active:hover {
+    background: #0a667a;
+    color: #ffffff;
+}
+
+@media (hover: hover) {
+    .fish-showcase__pill:focus-visible {
+        outline: 2px solid #0d7a8f;
+        outline-offset: 2px;
+    }
+}
+
+/* ---------- প্রতিক্রিয়াশীল — desktop-এ pill-গুলো wrap হয় ---------- */
+@media (min-width: 768px) {
+    .fish-showcase__filters {
+        flex-wrap: wrap;
+        overflow-x: visible;
+    }
+}
+
+/* ==========================================================================
+   TRUST / WHY CHOOSE US — "কেন এখান থেকে কিনব?"
+   পরিষ্কার কার্ড, মৃদু সবুজ অ্যাকসেন্ট, রাউন্ডেড, হালকা ছায়া।
+   Entry অ্যানিমেশন খুবই মৃদু (150–250ms) এবং prefers-reduced-motion সম্মানিত।
+   ========================================================================== */
+
+.trust-section {
+    background: #ffffff;
+}
+
+.trust-feature-card {
+    border: 1px solid #eaf0e6;
+    border-radius: 1rem;
+    box-shadow: 0 1px 2px rgba(47, 125, 50, 0.04);
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+    animation: trust-card-in 0.22s ease-out both;
+}
+
+.trust-section .row > .col:nth-child(2) .trust-feature-card {
+    animation-delay: 0.06s;
+}
+
+.trust-section .row > .col:nth-child(3) .trust-feature-card {
+    animation-delay: 0.12s;
+}
+
+.trust-section .row > .col:nth-child(4) .trust-feature-card {
+    animation-delay: 0.18s;
+}
+
+.trust-feature-card:hover {
+    border-color: #dcead5;
+    box-shadow: 0 6px 18px rgba(47, 125, 50, 0.1);
+    transform: translateY(-2px);
+}
+
+.trust-feature-card__icon {
+    width: 58px;
+    height: 58px;
+    background: #eef6ea;
+    color: #2f7d32;
+    font-size: 1.45rem;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.trust-feature-card:hover .trust-feature-card__icon {
+    background: #2f7d32;
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+.trust-feature-card:focus-visible {
+    outline: 2px solid #2f7d32;
+    outline-offset: 2px;
+}
+
+@keyframes trust-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .trust-feature-card,
+    .trust-feature-card__icon {
+        animation: none;
+        transition: none;
+        transform: none;
+    }
+}
+
+/* ==========================================================================
+   OUR STORY — "গ্রাম থেকে আপনার ঘরে"
+   উষ্ণ, প্রাকৃতিক, rural-অনুভূতির গল্প সেকশন। বামে hand-crafted SVG দৃশ্য,
+   ডানে গল্প। mobile-এ stacked (ছবি → শিরোনাম → বর্ণনা → CTA)।
+   ========================================================================== */
+
+.our-story {
+    background: #fcfaf3;
+    border-top: 1px solid #f1ecdd;
+    border-bottom: 1px solid #f1ecdd;
+}
+
+/* desktop-এ সুষম ৬৪–৮০px প্যাডিং (বেস py-5 = 48px) */
+@media (min-width: 992px) {
+    .our-story {
+        padding-top: 5rem;
+        padding-bottom: 5rem;
+    }
+}
+
+.our-story__visual {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 1.25rem;
+    box-shadow: 0 10px 30px rgba(120, 108, 62, 0.12);
+    background: #f6f0dc;
+    overflow: hidden;
+    animation: story-fade-in 0.22s ease-out both;
+}
+
+.our-story__visual svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.our-story__content {
+    max-width: 540px;
+    animation: story-fade-in 0.22s ease-out 0.06s both;
+}
+
+.our-story__title {
+    color: #2f7d32;
+}
+
+.our-story__description {
+    color: #44503a;
+    line-height: 1.8;
+}
+
+@keyframes story-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .our-story__visual,
+    .our-story__content {
+        animation: none;
+    }
+}

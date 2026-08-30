@@ -111,37 +111,53 @@ class HomepageService
     /**
      * কনফিগ-ম্যাপড সেকশনসমূহ — ক্যাটাগরি/পণ্য না থাকলে সেকশন বাদ যায় (graceful)
      *
-     * চাল (rice) সেটিকে ডেডিকেটেড রাইস শোকেসে (riceShowcase) দেখানো হয়;
-     * তাই এখানে তা বাদ দেওয়া হয় যাতে একই পণ্য দুইবার না আসে।
+     * চাল (rice) ও মাছ (fish) আলাদা ডেডিকেটেড শোকেসে (riceShowcase/fishShowcase)
+     * দেখানো হয়; তাই এগুলো এখানে বাদ দেওয়া হয় যাতে একই পণ্য দুইবার না আসে।
      *
      * @return Collection<int, array<string, mixed>>
      */
     public function sections(): Collection
     {
-        $excludingRice = collect(config('shop.homepage.sections'))
-            ->except('rice')
+        $excludingDedicated = collect(config('shop.homepage.sections'))
+            ->except(['rice', 'fish'])
             ->map(fn (array $config, string $key) => $this->section($key))
             ->filter()
             ->values();
 
-        return $excludingRice;
+        return $excludingDedicated;
     }
 
     /**
-     * ডেডিকেটেড রাইস শোকেস — চাল মূল ক্যাটাগরি (+বংশধর) থেকে active পণ্য,
+     * ডেডিকেটেড রাইস শোকেস — চাল মূল ক্যাটাগরি (+বংশধর) থেকে active পণ্য
+     */
+    public function riceShowcase(): ?array
+    {
+        return $this->showcaseFromConfig('rice_showcase');
+    }
+
+    /**
+     * ডেডিকেটেড ফ্রেশ ফিশ শোকেস — মাছ মূল ক্যাটাগরি (+বংশধর) থেকে active পণ্য
+     */
+    public function fishShowcase(): ?array
+    {
+        return $this->showcaseFromConfig('fish_showcase');
+    }
+
+    /**
+     * কনফিগ-ম্যাপড ডেডিকেটেড শোকেস — মূল ক্যাটাগরি (+বংশধর) থেকে active পণ্য,
      * সক্রিয় child ক্যাটাগরিগুলো quick-link হিসেবে। সম্পূর্ণ slug-ভিত্তিক।
      *
      * @return array{rootCategory: Category, children: Collection<int, Category>, products: Collection, productCount: int}|null
      */
-    public function riceShowcase(): ?array
+    private function showcaseFromConfig(string $configKey): ?array
     {
-        $config = config('shop.homepage.rice_showcase');
+        $config = config("shop.homepage.{$configKey}");
 
         if (! $config || empty($config['slugs'])) {
             return null;
         }
 
-        // এক কুয়েরিতে মূল রাইস ক্যাটাগরি — child-রা eager-loaded
+        // এক কুয়েরিতে মূল ক্যাটাগরি — child-রা eager-loaded
         $roots = Category::query()
             ->active()
             ->whereIn('slug', $config['slugs'])

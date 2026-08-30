@@ -4,4 +4,6 @@ Before planning or editing, find the row whose globs match the file's path and r
 
 | Applies to | Rule file |
 | --- | --- |
-| resources/views/**/*.blade.php | .ai/rules/views.md |
+| resources/views/components/trust-feature-card.blade.php, resources/views/components/our-story.blade.php | .ai/rules/components.md |
+| app/Services/HomepageService.php | .ai/rules/services.md |
+| resources/views/**/*.blade.php, resources/views/home.blade.php | .ai/rules/views.md |

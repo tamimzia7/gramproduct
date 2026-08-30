@@ -97,6 +97,17 @@
                 :product-count="$riceShowcase['productCount']" />
     @endif
 
+    {{-- ======================= Fresh Fish Showcase =======================
+         তাজা মাছ — ডেডিকেটেড হোমপেজ ফোকাস; সব ডেটা HomepageService থেকে
+         (component নিজে কোনো কুয়েরি চালায় না)। ক্যাটাগরি/কনফিগ না থাকলে বাদ। --}}
+    @if (! empty($fishShowcase))
+        <x-fish-showcase
+                :products="$fishShowcase['products']"
+                :categories="$fishShowcase['children']"
+                :root-category="$fishShowcase['rootCategory']"
+                :product-count="$fishShowcase['productCount']" />
+    @endif
+
     {{-- ==================== Dynamic collection sections ==================== --}}
     @foreach ($sections as $section)
         <section class="py-5 {{ $loop->even ? 'bg-light' : '' }}">
@@ -111,63 +122,38 @@
         </section>
     @endforeach
 
-    {{-- ======================= Promotional Banner ======================= --}}
-    <section class="py-5">
-        <div class="container">
-            <div class="rounded-4 p-4 p-md-5 text-white bg-success d-flex flex-wrap align-items-center justify-content-between gap-3 shadow-sm">
-                <div>
-                    <h2 class="h4 fw-bold mb-1">{{ __('home.promo.title') }}</h2>
-                    <p class="mb-0 opacity-75">{{ __('home.promo.subtitle') }}</p>
-                </div>
-                <a href="{{ route('products.index') }}" class="btn btn-light btn-lg text-success fw-semibold">
-                    {{ __('home.promo.cta') }}
-                </a>
-            </div>
-        </div>
-    </section>
-
-    {{-- ======================= Why Choose Us ======================= --}}
-    <section class="py-5 bg-light">
+    {{-- ==================== Trust / Why Choose Us ====================
+         "কেন এখান থেকে কিনব?" — ফুটারের আগে বিশ্বাস গঠনের সেকশন।
+         স্ট্যাটিক কনটেন্ট lang জনিত; সব ডেটা props-এর মাধ্যমে
+         (component নিজে কোনো কুয়েরি চালায় না)। --}}
+    <section class="trust-section py-5 bg-white">
         <div class="container">
             <x-section-header :title="__('home.why.title')" :subtitle="__('home.why.subtitle')" />
-            <div class="row g-4">
+            <div class="row g-3 g-md-4 row-cols-1 row-cols-sm-2 row-cols-xl-4">
                 @foreach (__('home.why.items') as $item)
-                    <div class="col-md-4">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body text-center p-4">
-                                <i class="bi {{ $item['icon'] }} fs-1 text-success"></i>
-                                <h3 class="h5 mt-3">{{ $item['title'] }}</h3>
-                                <p class="text-muted small mb-0">{{ $item['text'] }}</p>
-                            </div>
-                        </div>
+                    <div class="col d-flex">
+                        <x-trust-feature-card
+                                :icon="$item['icon']"
+                                :title="$item['title']"
+                                :description="$item['description']" />
                     </div>
                 @endforeach
             </div>
         </div>
     </section>
 
-    {{-- ======================= Trust / Benefits ======================= --}}
-    <section class="py-4 border-top border-bottom bg-white">
-        <div class="container">
-            <ul class="list-unstyled d-flex flex-wrap justify-content-center gap-4 mb-0">
-                @foreach (__('home.trust.items') as $trust)
-                    <li class="d-flex align-items-center gap-2">
-                        <i class="bi bi-patch-check-fill text-success fs-5" aria-hidden="true"></i>
-                        <span class="fw-semibold">{{ $trust }}</span>
-                    </li>
-                @endforeach
-            </ul>
-        </div>
-    </section>
-
-    {{-- ============================== CTA ============================== --}}
-    <section class="py-5">
-        <div class="container text-center">
-            <h2 class="h3 fw-bold">{{ __('home.cta.title') }}</h2>
-            <p class="text-muted mt-2">{{ __('home.cta.subtitle') }}</p>
-            <a href="{{ route('products.index') }}" class="btn btn-success btn-lg px-5 mt-3">
-                {{ __('home.cta.button') }}
-            </a>
-        </div>
-    </section>
+    {{-- ==================== Our Story / Village Origin ====================
+         "গ্রাম থেকে আপনার ঘরে" — বিশ্বাস-পর্বের পর গ্রামীণ উৎসের গল্প।
+         স্ট্যাটিক কনটেন্ট lang জনিত; কোনো DB কুয়েরি নেই।
+         ভিজ্যুয়াল: hand-crafted inline SVG দৃশ্য (ডাউনলোড/জেনারেটেড ছবি নয়)।
+         No About page exists — primary CTA points to categories.index. --}}
+    <x-our-story
+            :title="__('home.story.title')"
+            :subtitle="__('home.story.subtitle')"
+            :description="__('home.story.description')"
+            :image-alt="__('home.story.image_alt')"
+            :cta-url="route('categories.index')"
+            :cta-label="__('home.story.cta_about')"
+            :products-url="route('products.index')"
+            :products-label="__('home.story.cta_products')" />
 </x-layouts.app>

@@ -322,6 +322,104 @@ class HomepageTest extends TestCase
         $this->assertStringNotContainsString('গোপন ইলিশ', $content);
     }
 
+    /**
+     * fish showcase section markup extract
+     */
+    private function fishShowcaseSectionHtml(): string
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        $start = strpos($content, '<section class="fish-showcase');
+        if ($start === false) {
+            return '';
+        }
+
+        $end = strpos($content, '</section>', $start);
+        if ($end === false) {
+            return '';
+        }
+
+        return substr($content, $start, $end - $start + strlen('</section>'));
+    }
+
+    public function test_fish_showcase_renders_child_quick_links_and_view_all(): void
+    {
+        $fish = $this->makeCategory('fish-seafood', ['name' => 'মাছ']);
+        $freshwater = $this->makeCategory('freshwater-fish', ['name' => 'মিঠে পানির মাছ', 'parent_id' => $fish->id]);
+        $dried = $this->makeCategory('dried-fish', ['name' => 'শুঁটকি মাছ', 'parent_id' => $fish->id]);
+
+        Product::factory()->create(['name' => 'দেশি কৈ মাছ', 'category_id' => $freshwater->id]);
+        Product::factory()->create(['name' => 'লোনা শুঁটকি মাছ', 'category_id' => $dried->id]);
+
+        $content = $this->get(route('home'))->assertOk()->getContent();
+
+        // শিরোনাম + view-all link (root ক্যাটাগরি পেজে)
+        $this->assertStringContainsString('তাজা মাছ', $content);
+        $this->assertStringContainsString('সব মাছ দেখুন', $content);
+        $this->assertStringContainsString(route('categories.show', $fish), $content);
+
+        // child quick-links — dynamic, DB-driven
+        $this->assertStringContainsString('মিঠে পানির মাছ', $content);
+        $this->assertStringContainsString(route('categories.show', $freshwater), $content);
+        $this->assertStringContainsString('শুঁটকি মাছ', $content);
+        $this->assertStringContainsString(route('categories.show', $dried), $content);
+
+        // both products present
+        $this->assertStringContainsString('দেশি কৈ মাছ', $content);
+        $this->assertStringContainsString('লোনা শুঁটকি মাছ', $content);
+    }
+
+    public function test_fish_showcase_dynamic_product_count_is_calculated(): void
+    {
+        $fish = $this->makeCategory('fish-seafood', ['name' => 'মাছ']);
+        $freshwater = $this->makeCategory('freshwater-fish', ['name' => 'মিঠে পানির মাছ', 'parent_id' => $fish->id]);
+
+        Product::factory()->count(3)->create(['name' => 'মাছ পণ্য', 'category_id' => $freshwater->id]);
+
+        $content = $this->get(route('home'))->assertOk()->getContent();
+
+        // সংখ্যা ডায়নামিক — fake নয়
+        $this->assertStringContainsString('৩ ধরনের মাছ', $content);
+    }
+
+    public function test_fish_showcase_inactive_child_category_products_not_shown(): void
+    {
+        $fish = $this->makeCategory('fish-seafood', ['name' => 'মাছ']);
+        $activeChild = $this->makeCategory('freshwater-fish', ['name' => 'মিঠে পানির মাছ', 'parent_id' => $fish->id]);
+        $inactiveChild = $this->makeCategory('dried-fish', ['name' => 'লুকানো মাছ', 'parent_id' => $fish->id, 'is_active' => false]);
+
+        Product::factory()->create(['name' => 'দৃশ্যমান কৈ মাছ', 'category_id' => $activeChild->id]);
+        Product::factory()->create(['name' => 'লুকানো শুঁটকি', 'category_id' => $inactiveChild->id]);
+
+        $fishSection = $this->fishShowcaseSectionHtml();
+
+        $this->assertStringContainsString('তাজা মাছ', $fishSection);
+        $this->assertStringContainsString('দৃশ্যমান কৈ মাছ', $fishSection);
+        $this->assertStringNotContainsString('লুকানো শুঁটকি', $fishSection);
+
+        // inactive child-এর quick link নেই
+        $this->assertStringNotContainsString(route('categories.show', $inactiveChild), $fishSection);
+    }
+
+    public function test_fish_showcase_hidden_without_active_products(): void
+    {
+        // root exists but no active products → section hidden entirely
+        $this->makeCategory('fish-seafood', ['name' => 'মাছ']);
+
+        $content = $this->get(route('home'))->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('তাজা মাছ', $content);
+        $this->assertStringNotContainsString('সব মাছ দেখুন', $content);
+    }
+
+    public function test_fish_section_is_hidden_gracefully_without_matching_category(): void
+    {
+        // fish-seafood ক্যাটাগরি নেই — সেকশনটি ভেঙে পড়ার বদলে অদৃশ্য হবে
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertDontSee('তাজা মাছ');
+    }
+
     // ===================== 6-8. Listing, search, filter =====================
 
     public function test_product_listing_works(): void
@@ -580,6 +678,170 @@ class HomepageTest extends TestCase
                 $this->assertStringNotContainsString($needle, $response->getContent(), "\"{$needle}\" found on {$url}");
             }
         }
+    }
+
+    // ===================== 18. Trust / Why Choose Us =====================
+
+    public function test_trust_section_renders_heading_and_four_feature_cards(): void
+    {
+        $content = $this->get(route('home'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('কেন আমাদের কাছ থেকে কিনবেন?', $content);
+        $this->assertStringContainsString(
+            'গ্রামের পণ্য বেছে নেওয়া থেকে আপনার ঘরে পৌঁছানো পর্যন্ত আমরা গুরুত্ব দিই মান ও সহজ সেবায়।',
+            $content,
+        );
+
+        foreach (['মানসম্মত পণ্য', 'গ্রামের উৎস', 'সহজ অর্ডার', 'নিরাপদ প্যাকেজিং'] as $title) {
+            $this->assertStringContainsString($title, $content);
+        }
+
+        foreach ([
+            'বাছাই করা পণ্যের প্রতি গুরুত্ব',
+            'গ্রাম ও স্থানীয় উৎসের পণ্য এক জায়গায়',
+            'সহজেই পণ্য বেছে নিয়ে অর্ডার করুন',
+            'পণ্য নিরাপদে পৌঁছে দেওয়ার ব্যবস্থা',
+        ] as $description) {
+            $this->assertStringContainsString($description, $content);
+        }
+    }
+
+    public function test_trust_cards_use_decorative_icons_with_visible_text(): void
+    {
+        $section = $this->trustSectionHtml();
+
+        // icon টাই নিজে শুধু icon নয় — বাংলা title + description সবসময় আছে
+        $this->assertGreaterThanOrEqual(4, substr_count($section, 'aria-hidden="true"'));
+
+        foreach (['bi bi-patch-check', 'bi bi-tree', 'bi bi-bag-check', 'bi bi-box-seam'] as $icon) {
+            $this->assertStringContainsString($icon, $section);
+        }
+    }
+
+    public function test_trust_section_makes_no_unsupported_claims(): void
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        foreach (['১০০% অর্গানিক', '১০০% কেমিক্যাল ফ্রি', 'সরাসরি কৃষকের কাছ থেকে', '২৪ ঘণ্টায় ডেলিভারি'] as $claim) {
+            $this->assertStringNotContainsString($claim, $content);
+        }
+    }
+
+    public function test_trust_section_is_last_section_after_removed_promo_and_cta(): void
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        $this->assertStringNotContainsString('মৌসুমি ও তাজা পণ্যের নিয়মিত সংগ্রহ', $content);
+        $this->assertStringNotContainsString('গ্রামের আসল স্বাদ ঘরে আনুন', $content);
+        $this->assertStringNotContainsString('গ্রামের উৎস থেকে সংগ্রহ', $content);
+
+        // trust section পণ্য সেকশনগুলোর পরে, ফুটারের আগে শেষ সেকশন
+        $trust = strpos($content, 'কেন আমাদের কাছ থেকে কিনবেন?');
+        $featured = strpos($content, 'ক্যাটাগরি থেকে কিনুন');
+        $this->assertNotFalse($trust, 'Trust heading not found.');
+        $this->assertNotFalse($featured, 'Category section not found.');
+        $this->assertGreaterThan($featured, $trust);
+    }
+
+    /**
+     * trust section markup extract
+     */
+    private function trustSectionHtml(): string
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        $start = strpos($content, '<section class="trust-section');
+        if ($start === false) {
+            return '';
+        }
+
+        $end = strpos($content, '</section>', $start);
+        if ($end === false) {
+            return '';
+        }
+
+        return substr($content, $start, $end - $start + strlen('</section>'));
+    }
+
+    // ===================== Story / Village Origin =====================
+
+    public function test_our_story_section_renders_heading_and_story_content(): void
+    {
+        $content = $this->get(route('home'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('গ্রাম থেকে আপনার ঘরে', $content);
+        $this->assertStringContainsString(
+            'গ্রামের মাটি, ক্ষেত, বিল-ঝিল ও স্থানীয় উৎসের নানা পণ্যকে সহজভাবে আপনার ঘরে পৌঁছে দেওয়াই আমাদের লক্ষ্য।',
+            $content,
+        );
+        $this->assertStringContainsString(
+            'আমাদের যাত্রা গ্রামের পণ্যকে আরও সহজে মানুষের কাছে পৌঁছে দেওয়ার লক্ষ্যে।',
+            $content,
+        );
+    }
+
+    public function test_our_story_ctas_link_to_existing_routes(): void
+    {
+        $section = $this->ourStorySectionHtml();
+
+        $this->assertStringContainsString('আমাদের সম্পর্কে জানুন', $section);
+        $this->assertStringContainsString('পণ্য দেখুন', $section);
+        $this->assertStringContainsString(route('categories.index'), $section);
+        $this->assertStringContainsString(route('products.index'), $section);
+    }
+
+    public function test_our_story_visual_is_inline_svg_with_bengali_label(): void
+    {
+        $section = $this->ourStorySectionHtml();
+
+        $this->assertStringContainsString('role="img"', $section);
+        $this->assertStringContainsString('aria-label="গ্রামের ধানক্ষেত, বিল-ঝিল ও সবুজ মাঠের দৃশ্য"', $section);
+        $this->assertStringContainsString('<svg', $section);
+        $this->assertStringContainsString('aria-hidden="true"', $section);
+    }
+
+    public function test_our_story_makes_no_unsupported_claims(): void
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        foreach (['১০০% অর্গানিক', 'কেমিক্যাল মুক্ত', 'বিষমুক্ত', 'সরাসরি কৃষকের কাছ থেকে', 'নিজস্ব খামার', 'নিজস্ব মিল'] as $claim) {
+            $this->assertStringNotContainsString($claim, $content);
+        }
+    }
+
+    public function test_our_story_appears_after_trust_section(): void
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        $story = strpos($content, 'গ্রাম থেকে আপনার ঘরে');
+        $trust = strpos($content, 'কেন আমাদের কাছ থেকে কিনবেন?');
+        $this->assertNotFalse($story, 'Story heading not found.');
+        $this->assertNotFalse($trust, 'Trust heading not found.');
+        $this->assertGreaterThan($trust, $story);
+    }
+
+    /**
+     * our story section markup extract
+     */
+    private function ourStorySectionHtml(): string
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        $start = strpos($content, '<section class="our-story');
+        if ($start === false) {
+            return '';
+        }
+
+        $end = strpos($content, '</section>', $start);
+        if ($end === false) {
+            return '';
+        }
+
+        return substr($content, $start, $end - $start + strlen('</section>'));
     }
 
     // ===================== 19. Admin content protection =====================
