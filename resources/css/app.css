@@ -1008,3 +1008,180 @@ main {
         transform: none;
     }
 }
+
+/* ==========================================================================
+   DELIVERY INFORMATION — "আপনার ঠিকানায় পণ্য পৌঁছে দিই"
+   স্ট্যাটিক lang-ড্রiven (কোনো DB/JS নেই)। কোনো ফেক এলাকা/চার্জ/সময়/ট্র্যাকিং
+   দেখানো হয় না — বাস্তব ডেলিভারি ও ক্যাশ অন ডেলিভারি তথ্য।
+   ========================================================================== */
+
+.delivery-info {
+    background: #ffffff;
+    border-top: 1px solid #f0f4ec;
+}
+
+.delivery-info-card {
+    border: 1px solid #e4ecd9;
+    border-radius: 1rem;
+    box-shadow: 0 1px 2px rgba(47, 125, 50, 0.04);
+    background: #ffffff;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+    animation: delivery-card-in 0.22s ease-out both;
+}
+
+.delivery-info .row > .col:nth-child(2) .delivery-info-card {
+    animation-delay: 0.06s;
+}
+
+.delivery-info .row > .col:nth-child(3) .delivery-info-card {
+    animation-delay: 0.12s;
+}
+
+.delivery-info-card:hover {
+    border-color: #dcead5;
+    box-shadow: 0 6px 18px rgba(47, 125, 50, 0.1);
+    transform: translateY(-2px);
+}
+
+.delivery-info-card:focus-visible {
+    outline: 2px solid #2f7d32;
+    outline-offset: 2px;
+}
+
+.delivery-info-card__icon {
+    width: 58px;
+    height: 58px;
+    background: #eef6ea;
+    color: #2f7d32;
+    font-size: 1.45rem;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.delivery-info-card:hover .delivery-info-card__icon {
+    background: #2f7d32;
+    color: #ffffff;
+    transform: translateY(-2px);
+}
+
+@keyframes delivery-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .delivery-info-card,
+    .delivery-info-card__icon {
+        animation: none;
+        transition: none;
+        transform: none;
+    }
+}
+
+/* ==========================================================================
+   SPECIAL OFFERS — "বিশেষ অফার"
+   সম্পূর্ণ ডেটাবেস-চালিত: পণ্য-কার্ডের বিদ্যমান ছাড় (compare_at_price/price)
+   অনুযায়ী অফার আসে। পণ্য না থাকলে পুরো সেকশন বাদ যায়। ফুটারের আগে
+   হালকা সবুজ ব্যান্ড — অফারের সূচক, অ্যাগ্রেসিভ রঙ নয়।
+   ========================================================================== */
+
+.special-offers-section {
+    background: #f7faf4;
+    border-top: 1px solid #edf3e8;
+}
+
+.special-offers-section .product-card {
+    animation: offer-card-in 0.22s ease-out both;
+}
+
+.special-offers-section .row > .col:nth-child(2) .product-card {
+    animation-delay: 0.06s;
+}
+
+.special-offers-section .row > .col:nth-child(3) .product-card {
+    animation-delay: 0.12s;
+}
+
+.special-offers-section .row > .col:nth-child(4) .product-card {
+    animation-delay: 0.18s;
+}
+
+@keyframes offer-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .special-offers-section .product-card {
+        animation: none;
+        transition: none;
+        transform: none;
+    }
+}
+
+/* ==========================================================================
+   SEASONAL / FRESH PRODUCTS SHOWCASE — "এ সময়ের পণ্য"
+   সম্পূর্ণ ডেটাবেস-চালিত: অ্যাডমিন-চিহ্নিত is_seasonal পণ্য (products.is_seasonal)।
+   প্রতারণামূলক "আজকের তোলা / ১০০% তাজা / অর্গানিক" দাবি নেই — শুধুই real
+   seasonal classification। হালকা প্রাকৃতিক ব্যান্ড + নিচে কার্ড অ্যানিমেশন।
+   ========================================================================== */
+
+.seasonal-products-showcase {
+    background: #f1f6ec;
+    border-top: 1px solid #e3ecd8;
+}
+
+.seasonal-products-showcase .product-card {
+    animation: seasonal-card-in 0.22s ease-out both;
+}
+
+.seasonal-products-showcase .row > .col:nth-child(2) .product-card {
+    animation-delay: 0.06s;
+}
+
+.seasonal-products-showcase .row > .col:nth-child(3) .product-card {
+    animation-delay: 0.12s;
+}
+
+.seasonal-products-showcase .row > .col:nth-child(4) .product-card {
+    animation-delay: 0.18s;
+}
+
+@keyframes seasonal-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .seasonal-products-showcase .product-card {
+        animation: none;
+        transition: none;
+        transform: none;
+    }
+}

@@ -7,6 +7,7 @@ use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class HomepageService
 {
@@ -107,6 +108,61 @@ class HomepageService
             ->concat($fill)
             ->unique('id')
             ->values();
+    }
+
+    /**
+     * বিশেষ অফার — বর্তমানে সক্রিয় ছাড়যুক্ত পণ্য।
+     *
+     * "অফার" = কার্ডে যে ছাড় দেখা যায়: সক্রিয় display-ভ্যারিয়েন্টে
+     * compare_at_price > price (ভ্যারিয়েন্টবিহীন পণ্যে product-স্তরে
+     * compare_at_price > কার্যকর মূল্য)। তারিখভিত্তিক অফার সিস্টেম এখানে নেই,
+     * তাই মেয়াদ-উত্তীর্ণ যুক্তি প্রযোজ্য নয় — ছাড় সম্পূর্ণ অ্যাডমিন-নিয়ন্ত্রিত
+     * বিদ্যমান price/compare_at_price ফিল্ড থেকেই আসে (কোনো hard-code নেই)।
+     */
+    public function offerProducts(): Collection
+    {
+        $limit = (int) config('shop.homepage.offer_limit');
+
+        return $this->productQuery()
+            ->where(function (Builder $query) {
+                $query->whereHas('activeVariants', function (Builder $variants) {
+                    $variants->whereColumn('compare_at_price', '>', 'price');
+                })->orWhere(function (Builder $productLevel) {
+                    $productLevel->whereDoesntHave('activeVariants')
+                        ->whereColumn('compare_at_price', '>', DB::raw('COALESCE(discount_price, base_price)'));
+                });
+            })
+            ->orderByRaw("CASE WHEN stock_status = 'out_of_stock' THEN 1 ELSE 0 END")
+            ->orderByDesc('is_bestseller')
+            ->orderByDesc('is_featured')
+            ->orderByDesc('is_seasonal')
+            ->orderBy('sort_order')
+            ->latest()
+            ->take($limit)
+            ->get();
+    }
+
+    /**
+     * এ সময়ের পণ্য — অ্যাডমিন-চিহ্নিত মৌসুমি (is_seasonal) সক্রিয় পণ্য।
+     *
+     * মৌসুমি শ্রেণীবিন্যাস **ইতিমধ্যেই** products.is_seasonal (boolean) +
+     * seasonal_info দিয়ে আছে — নতুন কোনো ফিল্ড/ট্যাবেল নেই। তারিখভিত্তিক
+     * start/end ফিল্ডও নেই, তাই মেয়াদ-উত্তীর্ণ যুক্তি প্রযোজ্য নয়।
+     * ক্রম: বিদ্যমান মার্চেন্ডাইজিং (স্টক-অগ্রাধিকার → featured →
+     * sort_order → নবীনতম); কোনো নতুন র‍্যাঙ্কিং সিস্টেম উদ্ভাবন করা হয়নি।
+     */
+    public function seasonalProducts(): Collection
+    {
+        $limit = (int) config('shop.homepage.seasonal_limit');
+
+        return $this->productQuery()
+            ->seasonal()
+            ->orderByRaw("CASE WHEN stock_status = 'out_of_stock' THEN 1 ELSE 0 END")
+            ->orderByDesc('is_featured')
+            ->orderBy('sort_order')
+            ->latest()
+            ->take($limit)
+            ->get();
     }
 
     /**

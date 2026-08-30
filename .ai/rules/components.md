@@ -4,6 +4,7 @@ paths:
   - resources/views/components/our-story.blade.php
   - 'resources/views/components/testimonials-*'
   - 'resources/views/components/order-*'
+  - 'resources/views/components/delivery-info-*'
 ---
 
 # Components
@@ -19,3 +20,6 @@ No review system exists (no Review model/table). The testimonials section must O
 
 ## Order Process section is static lang per order-*
 The Order Process / How It Works section ("কীভাবে অর্ডার করবেন?") is fully static lang-driven (`home.order` in lang/bn/home.php: title/subtitle/cta/steps with number+icon+title+description). `<x-order-step>` is props-only and formats its number as zero-padded Bengali (০১–০৪) via BengaliNumber. `<x-order-process>` reads home.order internally, renders 4 steps + CTA to products.index. No DB, no JS, no delivery-time/free-delivery claims; icons are existing bi-* classes.
+
+## Delivery section static; no zones/tracking; COD card
+The Delivery Information section ("আপনার ঠিকানায় পণ্য পৌঁছে দিই") is fully static lang-driven (`home.delivery` in lang/bn/home.php). `<x-delivery-info-card>` is props-only. There are NO delivery zones/areas tables and NO order-tracking system, so: never hard-code cities, never show a fixed charge (`config/delivery.php` fees exist but are intentionally not displayed on the homepage), never promise delivery times, and do NOT show an "অর্ডার ট্র্যাকিং" card — the third card is the real Cash on Delivery feature (matching checkout.cod_*).

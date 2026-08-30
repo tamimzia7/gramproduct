@@ -1033,6 +1033,417 @@ class HomepageTest extends TestCase
         return substr($content, $start, $end - $start + strlen('</section>'));
     }
 
+    // ===================== Delivery Information =====================
+
+    public function test_delivery_info_section_renders_bengali_content(): void
+    {
+        $content = $this->get(route('home'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('আপনার ঠিকানায় পণ্য পৌঁছে দিই', $content);
+        $this->assertStringContainsString('অর্ডার করার সময় আপনার ঠিকানা নির্বাচন করুন এবং প্রযোজ্য ডেলিভারি তথ্য দেখে অর্ডার সম্পন্ন করুন।', $content);
+
+        foreach ([
+            'ডেলিভারি এলাকা' => 'আপনার এলাকায় ডেলিভারি সুবিধা রয়েছে কি না অর্ডারের সময় যাচাই করুন।',
+            'ডেলিভারি চার্জ' => 'আপনার ঠিকানা ও অর্ডারের নিয়ম অনুযায়ী প্রযোজ্য ডেলিভারি চার্জ দেখানো হবে।',
+            'ক্যাশ অন ডেলিভারি' => 'পণ্য হাতে পেয়ে পেমেন্টের সুবিধা। ডেলিভারির সময় অর্থ পরিশোধ করা হয়।',
+        ] as $title => $description) {
+            $this->assertStringContainsString($title, $content, "Missing card title {$title}.");
+            $this->assertStringContainsString($description, $content, "Missing card description {$title}.");
+        }
+    }
+
+    public function test_delivery_info_renders_three_cards_with_icons(): void
+    {
+        $section = $this->deliveryInfoSectionHtml();
+
+        $this->assertSame(3, substr_count($section, 'delivery-info-card__icon'));
+        $this->assertStringContainsString('bi-geo-alt', $section);
+        $this->assertStringContainsString('bi-cash-stack', $section);
+        $this->assertStringContainsString('bi-cash', $section);
+        $this->assertStringContainsString('aria-hidden="true"', $section);
+        $this->assertStringContainsString('row-cols-md-3', $section);
+    }
+
+    public function test_delivery_info_section_placed_after_order_process(): void
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        $delivery = strpos($content, 'আপনার ঠিকানায় পণ্য পৌঁছে দিই');
+        $order = strpos($content, 'কীভাবে অর্ডার করবেন?');
+        $this->assertNotFalse($delivery, 'Delivery heading not found.');
+        $this->assertNotFalse($order, 'Order Process heading not found.');
+        $this->assertGreaterThan($order, $delivery);
+    }
+
+    public function test_delivery_info_makes_no_false_claims_or_hardcoded_areas(): void
+    {
+        $section = $this->deliveryInfoSectionHtml();
+
+        foreach ([
+            '২৪ ঘণ্টা', '২ দিনে', 'আজই পৌঁছে', 'ফ্রি ডেলিভারি',
+            'মাত্র ৳', '৳৫০', '৮০',
+            'অর্ডার ট্র্যাকিং', 'ট্র্যাক',
+            'ঢাকা', 'গাজীপুর', 'নারায়ণগঞ্জ', 'চট্টগ্রাম', 'সিলেট', 'খুলনা', 'রাজশাহী', 'বরিশাল', 'রংপুর', 'ময়মনসিংহ',
+        ] as $claim) {
+            $this->assertStringNotContainsString($claim, $section, "Unsupported/fake content found: {$claim}");
+        }
+    }
+
+    public function test_delivery_info_card_component_renders_and_escapes(): void
+    {
+        $html = Blade::render(
+            '<x-delivery-info-card :icon="$icon" :title="$title" :description="$description" />',
+            [
+                'icon' => 'bi-geo-alt',
+                'title' => '<b>ডেলিভারি এলাকা</b>',
+                'description' => 'ব্যাখ্যা টেক্সট',
+            ],
+        );
+
+        $this->assertStringContainsString('bi-geo-alt', $html);
+        $this->assertStringContainsString('&lt;b&gt;ডেলিভারি এলাকা&lt;/b&gt;', $html);
+        $this->assertStringContainsString('ব্যাখ্যা টেক্সট', $html);
+        $this->assertStringContainsString('aria-hidden="true"', $html);
+    }
+
+    /**
+     * delivery info section markup extract
+     */
+    private function deliveryInfoSectionHtml(): string
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        $start = strpos($content, '<section class="delivery-info');
+        if ($start === false) {
+            return '';
+        }
+
+        $end = strpos($content, '</section>', $start);
+        if ($end === false) {
+            return '';
+        }
+
+        return substr($content, $start, $end - $start + strlen('</section>'));
+    }
+
+    // ===================== Special Offers =====================
+
+    public function test_special_offers_section_hidden_without_discounted_products(): void
+    {
+        $content = $this->get(route('home'))
+            ->assertOk()
+            ->getContent();
+
+        foreach (['বিশেষ অফার', 'পছন্দের পণ্যগুলোতে থাকছে বিশেষ সুবিধা', 'special-offers-section'] as $needle) {
+            $this->assertStringNotContainsString($needle, $content, "Unexpected \"{$needle}\" on empty homepage.");
+        }
+    }
+
+    public function test_special_offers_shows_only_active_discounted_products(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+
+        // ১) পণ্য-স্তরের ছাড় — ভ্যারিয়েন্ট নেই → কার্ড product-প্রাইসিং দেখায় (অফারে আসবে)
+        $level = Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'অফার-১ চাল',
+            'base_price' => 100,
+            'discount_price' => 80,
+            'compare_at_price' => 150,
+        ]);
+        // ২) সক্রিয় ভ্যারিয়েন্টে ছাড় → অফারে আসবে
+        $variant = Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'অফার-২ মাছ',
+        ]);
+        ProductVariant::factory()->create([
+            'product_id' => $variant->id,
+            'name' => '৫০০ গ্রাম',
+            'price' => 400,
+            'compare_at_price' => 500,
+            'is_default' => true,
+        ]);
+        // ৩) ছাড়হীন active পণ্য → বাদ
+        $plain = Product::factory()->create(['category_id' => $cat->id, 'name' => 'সাধারণ চাল']);
+        // ৪) নিষ্ক্রিয় পণ্য — ছাড় থাকলেও বাদ
+        $inactive = Product::factory()->inactive()->create([
+            'category_id' => $cat->id,
+            'name' => 'নিষ্ক্রিয় অফার',
+            'base_price' => 100,
+            'compare_at_price' => 150,
+        ]);
+        // ৫) ছাড় শুধু নিষ্ক্রিয় ভ্যারিয়েন্টে → কার্ডে কোনো ছাড় নেই → বাদ
+        $inactiveVariantOnly = Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'নিষ্ক্রিয় ভ্যারিয়েন্ট অফার',
+        ]);
+        ProductVariant::factory()->create([
+            'product_id' => $inactiveVariantOnly->id,
+            'price' => 50,
+            'compare_at_price' => 80,
+            'is_active' => false,
+        ]);
+        // ৬) active ভ্যারিয়েন্ট আছে অথচ ভ্যারিয়েন্ট ছাড়হীন (পণ্য-স্তর discount_price সত্ত্বেও) → বাদ
+        $variantWithoutDiscount = Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'ভ্যারিয়েন্ট ছাড়হীন',
+            'base_price' => 100,
+            'discount_price' => 80,
+        ]);
+        ProductVariant::factory()->create([
+            'product_id' => $variantWithoutDiscount->id,
+            'price' => 60,
+            'compare_at_price' => null,
+        ]);
+
+        $content = $this->get(route('home'))->assertOk()->getContent();
+        $this->assertStringContainsString('বিশেষ অফার', $content);
+
+        $section = $this->specialOffersSectionHtml();
+        $this->assertStringContainsString($level->name, $section);
+        $this->assertStringContainsString($variant->name, $section);
+        $this->assertStringContainsString(route('products.show', $level), $section);
+
+        foreach ([$plain->name, $inactive->name, $inactiveVariantOnly->name, $variantWithoutDiscount->name] as $excluded) {
+            $this->assertStringNotContainsString($excluded, $section, "Unexpected \"{$excluded}\" in offers.");
+        }
+    }
+
+    public function test_special_offers_respects_config_limit(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+
+        foreach (range(1, 6) as $i) {
+            Product::factory()->create([
+                'category_id' => $cat->id,
+                'name' => 'অফার চাল '.$i,
+                'base_price' => 100,
+                'compare_at_price' => 150,
+            ]);
+        }
+
+        $section = $this->specialOffersSectionHtml();
+        $this->assertSame(4, (int) config('shop.homepage.offer_limit'));
+        $this->assertSame(4, substr_count($section, 'data-product-slug='));
+    }
+
+    public function test_special_offers_shows_real_discount_badge_and_previous_price(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+        Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'চালের অফার',
+            'base_price' => 100,
+            'compare_at_price' => 150,
+        ]);
+
+        $section = $this->specialOffersSectionHtml();
+        // কার্ডের বিদ্যমান ছাড়-লজিক: (১৫০−১০০)/১৫০ = ৩৩.৩% → ৩৩% ছাড়
+        $this->assertStringContainsString('৩৩% ছাড়', $section);
+        $this->assertStringContainsString('text-decoration-line-through', $section);
+        $this->assertStringContainsString('product-card', $section);
+    }
+
+    public function test_special_offers_placed_after_delivery_information(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+        Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'অফার চাল',
+            'base_price' => 100,
+            'compare_at_price' => 150,
+        ]);
+
+        $content = $this->get(route('home'))->getContent();
+        $delivery = strpos($content, 'আপনার ঠিকানায় পণ্য পৌঁছে দিই');
+        $offers = strpos($content, 'বিশেষ অফার');
+        $this->assertNotFalse($delivery, 'Delivery heading not found.');
+        $this->assertNotFalse($offers, 'Offers heading not found.');
+        $this->assertGreaterThan($delivery, $offers);
+    }
+
+    public function test_special_offers_view_all_links_to_products_index(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+        Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'অফার চাল',
+            'base_price' => 100,
+            'compare_at_price' => 150,
+        ]);
+
+        $section = $this->specialOffersSectionHtml();
+        $this->assertStringContainsString('সব পণ্য দেখুন', $section);
+        $this->assertStringContainsString(route('products.index'), $section);
+    }
+
+    /**
+     * special offers section markup extract
+     */
+    private function specialOffersSectionHtml(): string
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        $start = strpos($content, '<section class="special-offers-section');
+        if ($start === false) {
+            return '';
+        }
+
+        $end = strpos($content, '</section>', $start);
+        if ($end === false) {
+            return '';
+        }
+
+        return substr($content, $start, $end - $start + strlen('</section>'));
+    }
+
+    // ===================== Seasonal / Fresh Products =====================
+
+    public function test_seasonal_showcase_hidden_without_seasonal_products(): void
+    {
+        $content = $this->get(route('home'))
+            ->assertOk()
+            ->getContent();
+
+        foreach (['এ সময়ের পণ্য', 'মৌসুম অনুযায়ী বাছাই করা পণ্যগুলো এক জায়গায় দেখুন', 'seasonal-products-showcase'] as $needle) {
+            $this->assertStringNotContainsString($needle, $content, "Unexpected \"{$needle}\" on empty homepage.");
+        }
+    }
+
+    public function test_seasonal_showcase_shows_only_active_seasonal_products(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+
+        $seasonal = Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'মৌসুমি লাউ',
+            'is_seasonal' => true,
+            'seasonal_info' => 'নির্দিষ্ট মৌসুমে সরবরাহ হয়।',
+        ]);
+        $plain = Product::factory()->create(['category_id' => $cat->id, 'name' => 'সাধারণ সবজি']);
+        $inactive = Product::factory()->inactive()->create([
+            'category_id' => $cat->id,
+            'name' => 'নিষ্ক্রিয় মৌসুমি',
+            'is_seasonal' => true,
+        ]);
+
+        $content = $this->get(route('home'))->assertOk()->getContent();
+        $this->assertStringContainsString('এ সময়ের পণ্য', $content);
+        $this->assertStringContainsString('মৌসুম অনুযায়ী বাছাই করা পণ্যগুলো এক জায়গায় দেখুন', $content);
+
+        $section = $this->seasonalShowcaseSectionHtml();
+        $this->assertStringContainsString($seasonal->name, $section);
+        $this->assertStringContainsString(route('products.show', $seasonal), $section);
+
+        foreach ([$plain->name, $inactive->name] as $excluded) {
+            $this->assertStringNotContainsString($excluded, $section, "Unexpected \"{$excluded}\" in seasonal showcase.");
+        }
+    }
+
+    public function test_seasonal_showcase_respects_config_limit(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+
+        foreach (range(1, 6) as $i) {
+            Product::factory()->create([
+                'category_id' => $cat->id,
+                'name' => 'মৌসুমি পণ্য '.$i,
+                'is_seasonal' => true,
+            ]);
+        }
+
+        $section = $this->seasonalShowcaseSectionHtml();
+        $this->assertSame(4, (int) config('shop.homepage.seasonal_limit'));
+        $this->assertSame(4, substr_count($section, 'data-product-slug='));
+    }
+
+    public function test_seasonal_showcase_reuses_product_card_with_seasonal_badge(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+        $product = Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'হিমসাগর আম',
+            'is_seasonal' => true,
+        ]);
+        ProductVariant::factory()->create([
+            'product_id' => $product->id,
+            'name' => '১ কেজি',
+            'price' => 110,
+            'compare_at_price' => null,
+            'is_default' => true,
+        ]);
+
+        $section = $this->seasonalShowcaseSectionHtml();
+        $this->assertStringContainsString('product-card', $section);
+        $this->assertStringContainsString('হিমসাগর আম', $section);
+        $this->assertStringContainsString(route('products.show', $product), $section);
+        // মৌসুমি অবস্থা রঙে নয়, টেক্সট ব্যাজে জানানো হয় (§22)
+        $this->assertStringContainsString('মৌসুমি', $section);
+        // ভ্যারিয়েন্ট-স্তরের মূল্য ও ইউনিট লেবেল (কেজি) কার্ড থেকে দেখানো হয়
+        $this->assertStringContainsString('৳১১০', $section);
+        $this->assertStringContainsString('কেজি', $section);
+    }
+
+    public function test_seasonal_showcase_placed_after_special_offers(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+
+        Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'অফার চাল',
+            'base_price' => 100,
+            'compare_at_price' => 150,
+        ]);
+        Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'মৌসুমি লাউ',
+            'is_seasonal' => true,
+        ]);
+
+        $content = $this->get(route('home'))->getContent();
+        $offers = strpos($content, 'বিশেষ অফার');
+        $seasonal = strpos($content, 'এ সময়ের পণ্য');
+        $this->assertNotFalse($offers, 'Offers heading not found.');
+        $this->assertNotFalse($seasonal, 'Seasonal heading not found.');
+        $this->assertGreaterThan($offers, $seasonal);
+    }
+
+    public function test_seasonal_showcase_view_all_links_to_products_index(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+        Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'মৌসুমি লাউ',
+            'is_seasonal' => true,
+        ]);
+
+        $section = $this->seasonalShowcaseSectionHtml();
+        $this->assertStringContainsString('সব পণ্য দেখুন', $section);
+        $this->assertStringContainsString(route('products.index'), $section);
+    }
+
+    /**
+     * seasonal showcase section markup extract
+     */
+    private function seasonalShowcaseSectionHtml(): string
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        $start = strpos($content, '<section class="seasonal-products-showcase');
+        if ($start === false) {
+            return '';
+        }
+
+        $end = strpos($content, '</section>', $start);
+        if ($end === false) {
+            return '';
+        }
+
+        return substr($content, $start, $end - $start + strlen('</section>'));
+    }
+
     // ===================== 19. Admin content protection =====================
 
     public function test_admin_area_stays_protected_while_customer_pages_are_public(): void

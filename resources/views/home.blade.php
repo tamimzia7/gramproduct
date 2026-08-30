@@ -168,4 +168,23 @@
          "কীভাবে অর্ডার করবেন?" — ৪টি সহজ ধাপ। স্ট্যাটিক lang-ড্রiven
          (কোনো DB/JS নেই); ডেলিভারি সময়ের প্রতিশ্রুতি দেওয়া হয় না। --}}
     <x-order-process />
+
+    {{-- ==================== Delivery Information ====================
+         "আপনার ঠিকানায় পণ্য পৌঁছে দিই" — স্ট্যাটিক lang-ড্রiven
+         (কোনো DB/JS নেই); ফেক জোন/চার্জ/সময়/ট্র্যাকিং দেখানো হয় না। --}}
+    <x-delivery-info-section />
+
+    {{-- ==================== Special Offers ====================
+         "বিশেষ অফার" — সক্রিয় ছাড়যুক্ত পণ্য (ডেটাবেস-চালিত)।
+         কোনো ছাড়যুক্ত পণ্য না থাকলে পুরো সেকশন বাদ যায় (কোনো ফেক অফার নেই)। --}}
+    @if ($offerProducts->isNotEmpty())
+        <x-special-offers-section :products="$offerProducts" />
+    @endif
+
+    {{-- ==================== Seasonal / Fresh Products ====================
+         "এ সময়ের পণ্য" — অ্যাডমিন-চিহ্নিত মৌসুমি পণ্য (ডেটাবেস-চালিত)।
+         কোনো মৌসুমি পণ্য না থাকলে পুরো সেকশন বাদ যায়। --}}
+    @if ($seasonalProducts->isNotEmpty())
+        <x-seasonal-products-showcase :products="$seasonalProducts" />
+    @endif
 </x-layouts.app>
