@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Category;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -160,6 +162,66 @@ class HomepageService
             ->orderByRaw("CASE WHEN stock_status = 'out_of_stock' THEN 1 ELSE 0 END")
             ->orderByDesc('is_featured')
             ->orderBy('sort_order')
+            ->latest()
+            ->take($limit)
+            ->get();
+    }
+
+    /**
+     * জনপ্রিয় পণ্য — বাস্তব ক্রয় ডেটা থেকে (স্বয়ংক্রিয়)।
+     *
+     * ডেটা-উৎস: order_items.quantity-এর SUM (variant → product-এ যোগ)।
+     * শুধুমাত্র Order::STATUS_PENDING অর্ডার (এটিই বর্তমান সিস্টেমের একমাত্র
+     * আসল চেকআউট অবস্থা; cancelled/failed/গ্রাহক-বাতিল অবস্থা এখনো নেই — ভবিষ্যতে
+     * এলে শুধু এখানেই যোগ হবে)। অ্যাগ্রিগেশন সম্পূর্ণ DATABASE-স্তরে — PHP-তে
+     * সব অর্ডার লোড হয় না, স্কেলের ক্ষেত্রে collection-এও না। কোনো ক্রয় ডেটা
+     * না থাকলে খালি Collection → সেকশন লুকানো (বানানো জনপ্রিয়তা নেই)।
+     * Tie-break: product id (স্থিতিশীল) — কোনো random ordering নেই।
+     */
+    public function popularProducts(): Collection
+    {
+        $limit = (int) config('shop.homepage.popular_limit');
+
+        $ids = OrderItem::query()
+            ->join('product_variants', 'product_variants.id', '=', 'order_items.product_variant_id')
+            ->join('products', 'products.id', '=', 'product_variants.product_id')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.status', Order::STATUS_PENDING)
+            ->where('products.is_active', true)
+            ->whereNull('products.deleted_at')
+            ->groupBy('product_variants.product_id')
+            ->orderByRaw('SUM(order_items.quantity) DESC')
+            ->orderBy('product_variants.product_id')
+            ->limit($limit)
+            ->pluck('product_variants.product_id');
+
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        $products = $this->productQuery()
+            ->whereIn('products.id', $ids)
+            ->get()
+            ->keyBy('id');
+
+        return $ids->map(fn ($id) => $products[$id] ?? null)
+            ->filter()
+            ->values();
+    }
+
+    /**
+     * নতুন যোগ করা পণ্য — সম্পূর্ণ স্বয়ংক্রিয়।
+     *
+     * অ্যাডমিন পণ্য যোগ করে active করলেই এখানে আসবে — কোনো ম্যানুয়াল
+     * maintain-সেকশন/ফ্ল্যাগ লাগবে না (is_new_arrival আলাদা merchandising
+     * ফ্ল্যাগ; সেকশন নির্বাচন এর ওপর নির্ভর করে না)। published_at নেই, তাই
+     * customer-visible নিয়ম প্রয়োগের পর created_at DESC (নবীনতম প্রথম)।
+     */
+    public function newArrivals(): Collection
+    {
+        $limit = (int) config('shop.homepage.new_arrivals_limit');
+
+        return $this->productQuery()
             ->latest()
             ->take($limit)
             ->get();

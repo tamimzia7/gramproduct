@@ -187,4 +187,18 @@
     @if ($seasonalProducts->isNotEmpty())
         <x-seasonal-products-showcase :products="$seasonalProducts" />
     @endif
+
+    {{-- ==================== Popular Products ====================
+         "জনপ্রিয় পণ্য" — বাস্তব ক্রয়-পরিমাণ (order_items) থেকে স্বয়ংক্রিয়।
+         যথেষ্ট ক্রয় ডেটা না থাকলে পুরো সেকশন বাদ যায় (বানানো জনপ্রিয়তা নেই)। --}}
+    @if ($popularProducts->isNotEmpty())
+        <x-popular-products-section :products="$popularProducts" />
+    @endif
+
+    {{-- ==================== New Arrivals ====================
+         "নতুন যোগ করা পণ্য" — সম্পূর্ণ স্বয়ংক্রিয় (সর্বশেষ active পণ্য)।
+         কোনো পণ্য না থাকলে পুরো সেকশন বাদ যায়। --}}
+    @if ($newProducts->isNotEmpty())
+        <x-new-arrivals-section :products="$newProducts" />
+    @endif
 </x-layouts.app>

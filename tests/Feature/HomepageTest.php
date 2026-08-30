@@ -2,6 +2,8 @@
 
 use App\Models\Category;
 use App\Models\Inventory;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Role;
@@ -1432,6 +1434,332 @@ class HomepageTest extends TestCase
         $content = $this->get(route('home'))->getContent();
 
         $start = strpos($content, '<section class="seasonal-products-showcase');
+        if ($start === false) {
+            return '';
+        }
+
+        $end = strpos($content, '</section>', $start);
+        if ($end === false) {
+            return '';
+        }
+
+        return substr($content, $start, $end - $start + strlen('</section>'));
+    }
+
+    // ===================== Popular Products =====================
+
+    public function test_popular_products_hidden_without_purchase_data(): void
+    {
+        $content = $this->get(route('home'))
+            ->assertOk()
+            ->getContent();
+
+        foreach (['জনপ্রিয় পণ্য', 'ক্রেতাদের পছন্দের পণ্যগুলো এক নজরে দেখুন', 'popular-products-section'] as $needle) {
+            $this->assertStringNotContainsString($needle, $content, "Unexpected \"{$needle}\" on empty homepage.");
+        }
+    }
+
+    public function test_popular_products_ranked_by_real_order_quantity(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+
+        // A: দুই ভ্যারিয়েন্টে মোট ৭টি বিক্রি (৩+৪) → ১ম
+        $a = Product::factory()->create(['category_id' => $cat->id, 'name' => 'জনপ্রিয় চাল']);
+        $aVar1 = ProductVariant::factory()->create(['product_id' => $a->id, 'price' => 100]);
+        $aVar2 = ProductVariant::factory()->create(['product_id' => $a->id, 'price' => 90]);
+        $this->addSoldOrderItem($aVar1, 3);
+        $this->addSoldOrderItem($aVar2, 4);
+
+        // B: এক ভ্যারিয়েন্টে ৬টি → ২য়
+        $b = Product::factory()->create(['category_id' => $cat->id, 'name' => 'মাঝারি জনপ্রিয় মাছ']);
+        $bVar = ProductVariant::factory()->create(['product_id' => $b->id, 'price' => 300]);
+        $this->addSoldOrderItem($bVar, 6);
+
+        // C: বিক্রি নেই → সেকশনে নেই
+        $c = Product::factory()->create(['category_id' => $cat->id, 'name' => 'অবিক্রীত পণ্য']);
+
+        $content = $this->get(route('home'))->assertOk()->getContent();
+        $this->assertStringContainsString('জনপ্রিয় পণ্য', $content);
+        $this->assertStringContainsString('ক্রেতাদের পছন্দের পণ্যগুলো এক নজরে দেখুন', $content);
+
+        $section = $this->popularProductsSectionHtml();
+        $this->assertStringContainsString($a->name, $section);
+        $this->assertStringContainsString($b->name, $section);
+        $this->assertStringNotContainsString($c->name, $section, 'Unsold product should not appear.');
+
+        $this->assertLessThan(
+            strpos($section, route('products.show', $b)),
+            strpos($section, route('products.show', $a)),
+            'Most-purchased product must come first.',
+        );
+    }
+
+    public function test_popular_products_only_counts_pending_orders(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+
+        $pending = Product::factory()->create(['category_id' => $cat->id, 'name' => 'পেন্ডিং অর্ডারের পণ্য']);
+        $pendingVar = ProductVariant::factory()->create(['product_id' => $pending->id, 'price' => 100]);
+        $this->addSoldOrderItem($pendingVar, 5);
+
+        $cancelled = Product::factory()->create(['category_id' => $cat->id, 'name' => 'বাতিল অর্ডারের পণ্য']);
+        $cancelledVar = ProductVariant::factory()->create(['product_id' => $cancelled->id, 'price' => 100]);
+        $this->addSoldOrderItem($cancelledVar, 10, status: 'cancelled');
+
+        $section = $this->popularProductsSectionHtml();
+        $this->assertStringContainsString($pending->name, $section);
+        $this->assertStringNotContainsString($cancelled->name, $section);
+    }
+
+    public function test_popular_products_excludes_inactive_products(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+
+        $inactive = Product::factory()->inactive()->create(['category_id' => $cat->id, 'name' => 'নিষ্ক্রিয় জনপ্রিয়']);
+        $inactiveVar = ProductVariant::factory()->create(['product_id' => $inactive->id, 'price' => 100]);
+        $this->addSoldOrderItem($inactiveVar, 10);
+
+        // একমাত্র "জনপ্রিয়" পণ্যটিই নিষ্ক্রিয় → পুরো সেকশন বাদ
+        $content = $this->get(route('home'))->assertOk()->getContent();
+        $this->assertStringNotContainsString('জনপ্রিয় পণ্য', $content);
+        $this->assertStringNotContainsString($inactive->name, $content);
+    }
+
+    public function test_popular_products_respects_config_limit(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+
+        foreach (range(1, 6) as $i) {
+            $product = Product::factory()->create(['category_id' => $cat->id, 'name' => 'জনপ্রিয় পণ্য '.$i]);
+            $variant = ProductVariant::factory()->create(['product_id' => $product->id, 'price' => 100]);
+            $this->addSoldOrderItem($variant, 1);
+        }
+
+        $section = $this->popularProductsSectionHtml();
+        $this->assertSame(4, (int) config('shop.homepage.popular_limit'));
+        $this->assertSame(4, substr_count($section, 'data-product-slug='));
+    }
+
+    public function test_popular_products_placed_after_seasonal_showcase(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+
+        Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'মৌসুমি লাউ',
+            'is_seasonal' => true,
+        ]);
+
+        $sold = Product::factory()->create(['category_id' => $cat->id, 'name' => 'বিক্রিত পণ্য']);
+        $this->addSoldOrderItem(ProductVariant::factory()->create(['product_id' => $sold->id, 'price' => 100]), 3);
+
+        $content = $this->get(route('home'))->getContent();
+        $seasonal = strpos($content, 'এ সময়ের পণ্য');
+        $popular = strpos($content, 'জনপ্রিয় পণ্য');
+        $this->assertNotFalse($seasonal, 'Seasonal heading not found.');
+        $this->assertNotFalse($popular, 'Popular heading not found.');
+        $this->assertGreaterThan($seasonal, $popular);
+    }
+
+    public function test_popular_products_view_all_links_to_products_index(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+        $sold = Product::factory()->create(['category_id' => $cat->id, 'name' => 'বিক্রিত পণ্য']);
+        $this->addSoldOrderItem(ProductVariant::factory()->create(['product_id' => $sold->id, 'price' => 100]), 1);
+
+        $section = $this->popularProductsSectionHtml();
+        $this->assertStringContainsString('সব পণ্য দেখুন', $section);
+        $this->assertStringContainsString(route('products.index'), $section);
+        $this->assertStringContainsString('product-card', $section);
+    }
+
+    /**
+     * একটি pending অর্ডার + অর্ডার-আইটেম তৈরি করে (বাস্তব checkout-চালিত ডেটা নয়,
+     * তবে order_items কাঠামো হুবহু) — popularProducts-এর aggregation পরীক্ষার জন্য।
+     */
+    private function addSoldOrderItem(ProductVariant $variant, int $quantity, string $status = 'pending'): Order
+    {
+        $order = Order::create([
+            'user_id' => User::factory()->create()->id,
+            'order_number' => 'ORD-'.fake()->unique()->numberBetween(100000, 999999),
+            'receiver_name' => 'ক্রেতা',
+            'receiver_phone' => '01700000000',
+            'division' => 'ঢাকা',
+            'district' => 'ঢাকা',
+            'upazila' => 'সাভার',
+            'area' => 'টেস্ট',
+            'address_line' => 'টেস্ট ঠিকানা',
+            'delivery_method' => 'home_delivery',
+            'subtotal' => 0,
+            'delivery_fee' => 0,
+            'grand_total' => 0,
+            'status' => $status,
+            'payment_status' => 'unpaid',
+        ]);
+
+        OrderItem::create([
+            'order_id' => $order->id,
+            'product_variant_id' => $variant->id,
+            'product_name' => $variant->product->name,
+            'variant_name' => $variant->name,
+            'variant_sku' => $variant->sku,
+            'quantity' => $quantity,
+            'unit_price' => (float) $variant->price,
+            'line_total' => (float) $variant->price * $quantity,
+        ]);
+
+        return $order;
+    }
+
+    /**
+     * popular products section markup extract
+     */
+    private function popularProductsSectionHtml(): string
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        $start = strpos($content, '<section class="popular-products-section');
+        if ($start === false) {
+            return '';
+        }
+
+        $end = strpos($content, '</section>', $start);
+        if ($end === false) {
+            return '';
+        }
+
+        return substr($content, $start, $end - $start + strlen('</section>'));
+    }
+
+    // ===================== New Arrivals =====================
+
+    public function test_new_arrivals_section_hidden_without_products(): void
+    {
+        $content = $this->get(route('home'))
+            ->assertOk()
+            ->getContent();
+
+        foreach (['নতুন যোগ করা পণ্য', 'আমাদের সংগ্রহে নতুন যুক্ত হওয়া পণ্যগুলো দেখুন', 'new-arrivals-section'] as $needle) {
+            $this->assertStringNotContainsString($needle, $content, "Unexpected \"{$needle}\" on empty homepage.");
+        }
+    }
+
+    public function test_new_arrivals_shows_only_active_products_newest_first(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+
+        $oldest = Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'পুরনো পণ্য',
+            'created_at' => now()->subDays(9),
+        ]);
+        $middle = Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'মাঝারি পণ্য',
+            'created_at' => now()->subDays(5),
+        ]);
+        $newest = Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'নতুন পণ্য',
+            'created_at' => now()->subDay(),
+        ]);
+        Product::factory()->inactive()->create([
+            'category_id' => $cat->id,
+            'name' => 'নিষ্ক্রিয় নতুন',
+            'created_at' => now(),
+        ]);
+
+        $content = $this->get(route('home'))->assertOk()->getContent();
+        $this->assertStringContainsString('নতুন যোগ করা পণ্য', $content);
+        $this->assertStringContainsString('আমাদের সংগ্রহে নতুন যুক্ত হওয়া পণ্যগুলো দেখুন', $content);
+
+        $section = $this->newArrivalsSectionHtml();
+        $this->assertStringContainsString($oldest->name, $section);
+        $this->assertStringContainsString($newest->name, $section);
+        $this->assertStringNotContainsString('নিষ্ক্রিয় নতুন', $section);
+
+        $this->assertLessThan(
+            strpos($section, route('products.show', $oldest)),
+            strpos($section, route('products.show', $newest)),
+            'Newest product must appear first.',
+        );
+    }
+
+    public function test_new_arrivals_does_not_require_new_arrival_flag(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+        $plain = Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'ফ্ল্যাগহীন নতুন পণ্য',
+            'is_new_arrival' => false,
+        ]);
+
+        $section = $this->newArrivalsSectionHtml();
+        // অটোমেটিক — অ্যাডমিনের ম্যানুয়াল is_new_arrival চেক ছাড়াই আসে
+        $this->assertStringContainsString($plain->name, $section);
+    }
+
+    public function test_new_arrivals_respects_config_limit(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+
+        foreach (range(1, 6) as $i) {
+            Product::factory()->create([
+                'category_id' => $cat->id,
+                'name' => 'নতুন পণ্য '.$i,
+                'created_at' => now()->subDays($i),
+            ]);
+        }
+
+        $section = $this->newArrivalsSectionHtml();
+        $this->assertSame(4, (int) config('shop.homepage.new_arrivals_limit'));
+        $this->assertSame(4, substr_count($section, 'data-product-slug='));
+    }
+
+    public function test_new_arrivals_placed_after_popular_products(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+
+        $sold = Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'বিক্রিত পণ্য',
+            'created_at' => now()->subDays(15),
+        ]);
+        $this->addSoldOrderItem(ProductVariant::factory()->create(['product_id' => $sold->id, 'price' => 100]), 3);
+
+        Product::factory()->create([
+            'category_id' => $cat->id,
+            'name' => 'তাজা নতুন পণ্য',
+            'created_at' => now(),
+        ]);
+
+        $content = $this->get(route('home'))->getContent();
+        $popular = strpos($content, 'জনপ্রিয় পণ্য');
+        $newArrivals = strpos($content, 'নতুন যোগ করা পণ্য');
+        $this->assertNotFalse($popular, 'Popular heading not found.');
+        $this->assertNotFalse($newArrivals, 'New arrivals heading not found.');
+        $this->assertGreaterThan($popular, $newArrivals);
+    }
+
+    public function test_new_arrivals_view_all_links_to_products_index(): void
+    {
+        $cat = $this->makeCategory('rice-grains');
+        Product::factory()->create(['category_id' => $cat->id, 'name' => 'তাজা পণ্য']);
+
+        $section = $this->newArrivalsSectionHtml();
+        $this->assertStringContainsString('সব পণ্য দেখুন', $section);
+        $this->assertStringContainsString(route('products.index'), $section);
+        $this->assertStringContainsString('product-card', $section);
+    }
+
+    /**
+     * new arrivals section markup extract
+     */
+    private function newArrivalsSectionHtml(): string
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        $start = strpos($content, '<section class="new-arrivals-section');
         if ($start === false) {
             return '';
         }

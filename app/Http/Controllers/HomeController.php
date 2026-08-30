@@ -24,6 +24,8 @@ class HomeController extends Controller
             'sections' => $this->homepageService->sections(),
             'offerProducts' => $this->homepageService->offerProducts(),
             'seasonalProducts' => $this->homepageService->seasonalProducts(),
+            'popularProducts' => $this->homepageService->popularProducts(),
+            'newProducts' => $this->homepageService->newArrivals(),
             'reviews' => $this->homepageService->testimonials(),
         ]);
     }

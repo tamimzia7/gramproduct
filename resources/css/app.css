@@ -1185,3 +1185,97 @@ main {
         transform: none;
     }
 }
+
+/* ==========================================================================
+   POPULAR PRODUCTS — "জনপ্রিয় পণ্য"
+   স্বয়ংক্রিয়: বাস্তব ক্রয়-ডেটা (order_items.quantity) থেকে; পর্যাপ্ত ডেটা
+   না থাকলে সেকশন বাদ। সাদা ব্যাকগ্রাউন্ড — পণ্যই দৃষ্টিকেন্দ্র।
+   ========================================================================== */
+
+.popular-products-section {
+    background: #ffffff;
+    border-top: 1px solid #f0f4ec;
+}
+
+.popular-products-section .product-card {
+    animation: popular-card-in 0.22s ease-out both;
+}
+
+.popular-products-section .row > .col:nth-child(2) .product-card {
+    animation-delay: 0.06s;
+}
+
+.popular-products-section .row > .col:nth-child(3) .product-card {
+    animation-delay: 0.12s;
+}
+
+.popular-products-section .row > .col:nth-child(4) .product-card {
+    animation-delay: 0.18s;
+}
+
+@keyframes popular-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .popular-products-section .product-card {
+        animation: none;
+        transition: none;
+        transform: none;
+    }
+}
+
+/* ==========================================================================
+   NEW ARRIVALS — "নতুন যোগ করা পণ্য"
+   সম্পূর্ণ স্বয়ংক্রিয়: সর্বশেষ যোগ হওয়া active পণ্য (created_at DESC)।
+   কোনো per-product "নতুন" ব্যাজ উদ্ভাবন করা হয় না — শিরোনামই যথেষ্ট।
+   ========================================================================== */
+
+.new-arrivals-section {
+    background: #f7faf4;
+    border-top: 1px solid #edf3e8;
+}
+
+.new-arrivals-section .product-card {
+    animation: new-arrival-card-in 0.22s ease-out both;
+}
+
+.new-arrivals-section .row > .col:nth-child(2) .product-card {
+    animation-delay: 0.06s;
+}
+
+.new-arrivals-section .row > .col:nth-child(3) .product-card {
+    animation-delay: 0.12s;
+}
+
+.new-arrivals-section .row > .col:nth-child(4) .product-card {
+    animation-delay: 0.18s;
+}
+
+@keyframes new-arrival-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .new-arrivals-section .product-card {
+        animation: none;
+        transition: none;
+        transform: none;
+    }
+}
