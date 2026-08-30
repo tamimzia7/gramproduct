@@ -247,6 +247,7 @@ class HomepageService
                 'href' => 'tel:'.preg_replace('/[\s\-()]/', '', $phone),
                 'aria' => __('home.contact.phone_aria'),
                 'icon' => 'bi-telephone',
+                'display' => $phone,
             ];
         }
 
@@ -276,6 +277,7 @@ class HomepageService
                 'href' => 'mailto:'.$email,
                 'aria' => __('home.contact.email_aria'),
                 'icon' => 'bi-envelope',
+                'display' => $email,
             ];
         }
 

@@ -25,7 +25,7 @@
         {{ $slot ?? '' }}
     </main>
 
-    <x-footer />
+    <x-site-footer />
 
     @stack('scripts')
 </body>

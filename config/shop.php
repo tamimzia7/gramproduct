@@ -101,5 +101,21 @@ return [
         'whatsapp' => env('SHOP_WHATSAPP'),
         'whatsapp_url' => env('SHOP_WHATSAPP_URL'),
         'email' => env('SHOP_EMAIL'),
+        'address' => env('SHOP_ADDRESS'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Social Links — ফুটার
+    |--------------------------------------------------------------------------
+    |
+    | সোশ্যাল মাধ্যমের বাস্তব URL; .env-চালিত। কোনো মান সেট না থাকলে
+    | ফুটারে সোশ্যাল আইকন দেখানো হয় না — জাল/খালি URL কখনোই নয়।
+    */
+    'social' => [
+        'facebook' => env('SHOP_FACEBOOK'),
+        'instagram' => env('SHOP_INSTAGRAM'),
+        'youtube' => env('SHOP_YOUTUBE'),
+        'tiktok' => env('SHOP_TIKTOK'),
     ],
 ];
