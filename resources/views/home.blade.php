@@ -201,4 +201,11 @@
     @if ($newProducts->isNotEmpty())
         <x-new-arrivals-section :products="$newProducts" />
     @endif
+
+    {{-- ==================== Quick Contact CTA ====================
+         "কোনো কিছু জানতে চান?" — শুধুমাত্র বাস্তব কনফিগার করা যোগাযোগ মাধ্যম
+         (config/shop.php 'contact'). কিছুই সেট না থাকলে পুরো সেকশন লুকানো থাকে। --}}
+    @if (count($contactActions) > 0)
+        <x-contact-cta :actions="$contactActions" :contact-url="$contactUrl" />
+    @endif
 </x-layouts.app>

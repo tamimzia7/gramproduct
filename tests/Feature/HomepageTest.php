@@ -1772,6 +1772,127 @@ class HomepageTest extends TestCase
         return substr($content, $start, $end - $start + strlen('</section>'));
     }
 
+    // ===================== Quick Contact CTA =====================
+
+    public function test_contact_cta_section_hidden_without_configured_actions(): void
+    {
+        config([
+            'shop.contact.phone' => null,
+            'shop.contact.whatsapp' => null,
+            'shop.contact.whatsapp_url' => null,
+            'shop.contact.email' => null,
+        ]);
+
+        $content = $this->get(route('home'))
+            ->assertOk()
+            ->getContent();
+
+        foreach (['কোনো কিছু জানতে চান?', 'contact-cta-section'] as $needle) {
+            $this->assertStringNotContainsString($needle, $content, "Unexpected \"{$needle}\" on homepage without contact config.");
+        }
+    }
+
+    public function test_contact_cta_renders_only_configured_actions(): void
+    {
+        config([
+            'shop.contact.phone' => '+8801712 345678',
+            'shop.contact.whatsapp' => null,
+            'shop.contact.whatsapp_url' => null,
+            'shop.contact.email' => 'support@gramproduct.test',
+        ]);
+
+        $section = $this->contactCtaSectionHtml();
+        $this->assertStringContainsString('কোনো কিছু জানতে চান?', $section);
+        $this->assertStringContainsString('পণ্য, অর্ডার বা ডেলিভারি সম্পর্কে জানতে আমাদের সাথে যোগাযোগ করুন।', $section);
+
+        $this->assertStringContainsString('href="tel:+8801712345678"', $section);
+        $this->assertStringContainsString('ফোন করে যোগাযোগ করুন', $section);
+        $this->assertStringContainsString('href="mailto:support@gramproduct.test"', $section);
+        $this->assertStringContainsString('ইমেইল করে যোগাযোগ করুন', $section);
+
+        $this->assertStringNotContainsString('wa.me', $section, 'WhatsApp must not render when not configured.');
+        $this->assertStringNotContainsString('WhatsApp', $section);
+    }
+
+    public function test_contact_cta_builds_whatsapp_link_from_number(): void
+    {
+        config([
+            'shop.contact.phone' => null,
+            'shop.contact.whatsapp' => '+880 1700-000000',
+            'shop.contact.whatsapp_url' => null,
+            'shop.contact.email' => null,
+        ]);
+
+        $section = $this->contactCtaSectionHtml();
+        $this->assertStringContainsString('href="https://wa.me/8801700000000"', $section);
+        $this->assertStringContainsString('WhatsApp-এ বার্তা পাঠান', $section);
+        $this->assertStringContainsString('target="_blank"', $section);
+    }
+
+    public function test_contact_cta_prefers_configured_whatsapp_url(): void
+    {
+        config([
+            'shop.contact.phone' => null,
+            'shop.contact.whatsapp' => null,
+            'shop.contact.whatsapp_url' => 'https://wa.me/8801711223344',
+            'shop.contact.email' => null,
+        ]);
+
+        $section = $this->contactCtaSectionHtml();
+        $this->assertStringContainsString('href="https://wa.me/8801711223344"', $section);
+    }
+
+    public function test_contact_cta_placed_after_new_arrivals(): void
+    {
+        config([
+            'shop.contact.phone' => '+8801712345678',
+            'shop.contact.whatsapp' => null,
+            'shop.contact.whatsapp_url' => null,
+            'shop.contact.email' => null,
+        ]);
+
+        $cat = $this->makeCategory('rice-grains');
+        Product::factory()->create(['category_id' => $cat->id, 'name' => 'নতুন পণ্য']);
+
+        $content = $this->get(route('home'))->getContent();
+        $this->assertStringContainsString('কোনো কিছু জানতে চান?', $content);
+        $this->assertGreaterThan(
+            strpos($content, 'নতুন যোগ করা পণ্য'),
+            strpos($content, 'কোনো কিছু জানতে চান?'),
+        );
+    }
+
+    public function test_contact_cta_primary_renders_when_contact_route_exists(): void
+    {
+        config(['shop.contact.phone' => '+8801712345678']);
+        Route::get('contact', fn () => 'যোগাযোগ পাতা')->name('contact');
+        app('router')->getRoutes()->refreshNameLookups();
+
+        $section = $this->contactCtaSectionHtml();
+        $this->assertStringContainsString('যোগাযোগ করুন', $section);
+        $this->assertStringContainsString(route('contact'), $section);
+    }
+
+    /**
+     * contact CTA section markup extract
+     */
+    private function contactCtaSectionHtml(): string
+    {
+        $content = $this->get(route('home'))->getContent();
+
+        $start = strpos($content, '<section class="contact-cta-section');
+        if ($start === false) {
+            return '';
+        }
+
+        $end = strpos($content, '</section>', $start);
+        if ($end === false) {
+            return '';
+        }
+
+        return substr($content, $start, $end - $start + strlen('</section>'));
+    }
+
     // ===================== 19. Admin content protection =====================
 
     public function test_admin_area_stays_protected_while_customer_pages_are_public(): void

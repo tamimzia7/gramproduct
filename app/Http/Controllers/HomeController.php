@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\HomepageService;
+use Illuminate\Support\Facades\Route;
 use Illuminate\View\View;
 
 class HomeController extends Controller
@@ -26,6 +27,8 @@ class HomeController extends Controller
             'seasonalProducts' => $this->homepageService->seasonalProducts(),
             'popularProducts' => $this->homepageService->popularProducts(),
             'newProducts' => $this->homepageService->newArrivals(),
+            'contactActions' => $this->homepageService->contactActions(),
+            'contactUrl' => Route::has('contact') ? route('contact') : null,
             'reviews' => $this->homepageService->testimonials(),
         ]);
     }

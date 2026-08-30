@@ -228,6 +228,61 @@ class HomepageService
     }
 
     /**
+     * Quick Contact CTA — "কোনো কিছু জানতে চান?" অ্যাকশন তালিকা।
+     *
+     * শুধুমাত্র বাস্তব কনফিগার করা যোগাযোগ মাধ্যম (config/shop.php 'contact',
+     * .env-চালিত) ফেরত দেয়। কোনো মান সেট না থাকলে খালি অ্যারে — হোমপেজে পুরো
+     * সেকশন লুকানো থাকে। প্লেসহোল্ডার নম্বর/ইমেইল কখনোই নয়।
+     */
+    public function contactActions(): array
+    {
+        $config = config('shop.contact');
+        $actions = [];
+
+        $phone = (string) ($config['phone'] ?? '');
+        if ($phone !== '') {
+            $actions[] = [
+                'key' => 'phone',
+                'label' => __('home.contact.phone'),
+                'href' => 'tel:'.preg_replace('/[\s\-()]/', '', $phone),
+                'aria' => __('home.contact.phone_aria'),
+                'icon' => 'bi-telephone',
+            ];
+        }
+
+        $whatsappUrl = (string) ($config['whatsapp_url'] ?? '');
+        if ($whatsappUrl === '') {
+            $whatsapp = (string) ($config['whatsapp'] ?? '');
+            if ($whatsapp !== '') {
+                $whatsappUrl = 'https://wa.me/'.preg_replace('/\D/', '', $whatsapp);
+            }
+        }
+        if ($whatsappUrl !== '') {
+            $actions[] = [
+                'key' => 'whatsapp',
+                'label' => __('home.contact.whatsapp'),
+                'href' => $whatsappUrl,
+                'aria' => __('home.contact.whatsapp_aria'),
+                'icon' => 'bi-whatsapp',
+                'external' => true,
+            ];
+        }
+
+        $email = (string) ($config['email'] ?? '');
+        if ($email !== '') {
+            $actions[] = [
+                'key' => 'email',
+                'label' => __('home.contact.email'),
+                'href' => 'mailto:'.$email,
+                'aria' => __('home.contact.email_aria'),
+                'icon' => 'bi-envelope',
+            ];
+        }
+
+        return $actions;
+    }
+
+    /**
      * কনফিগ-ম্যাপড সেকশনসমূহ — ক্যাটাগরি/পণ্য না থাকলে সেকশন বাদ যায় (graceful)
      *
      * চাল (rice) ও মাছ (fish) আলাদা ডেডিকেটেড শোকেসে (riceShowcase/fishShowcase)
