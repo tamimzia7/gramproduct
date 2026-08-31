@@ -14,7 +14,7 @@ beforeEach(function () {
 });
 
 test('roles are seeded', function () {
-    expect(Role::count())->toBe(7);
+    expect(Role::count())->toBe(8);
     expect(Role::where('slug', 'super-admin')->exists())->toBeTrue();
 });
 

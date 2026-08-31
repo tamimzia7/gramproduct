@@ -30,7 +30,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::define('admin.access', fn (User $user) => $user->isActive() && $user->hasAnyRole());
 
-        foreach (RoleSeeder::PERMISSIONS as $permission) {
+        foreach (RoleSeeder::permissions() as $permission) {
             Gate::define($permission, fn (User $user) => $user->isActive() && $user->hasPermission($permission));
         }
 

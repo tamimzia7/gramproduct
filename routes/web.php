@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\InventoryController as AdminInventoryController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductImageController as AdminProductImageController;
@@ -86,7 +88,10 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'can:admin.access'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', [HomeController::class, 'adminDashboard'])->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
 
     Route::resource('categories', AdminCategoryController::class)->except(['show']);
     Route::get('categories/{category}', [AdminCategoryController::class, 'show'])->name('categories.show');

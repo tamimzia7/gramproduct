@@ -68,7 +68,15 @@ return new class extends Migration
             });
         }
 
-        // ৩) product_id বাদ (এর legacy index-ও সাথে ফেলা হয়) + variant NOT NULL
+        // ৩) পুরনো product_variant_id FK (nullOnDelete/SET NULL) আগেই drop,
+        //    নইলে MySQL NOT NULL-এ change করতে দেবে না (SET NULL FK-এর সাথে NOT NULL অসম্ভব)।
+        if ($this->hasForeignKeyOnColumn('cart_items', 'product_variant_id')) {
+            Schema::table('cart_items', function (Blueprint $table) {
+                $table->dropForeign(['product_variant_id']);
+            });
+        }
+
+        // ৪) product_id বাদ (এর legacy index-ও সাথে ফেলা হয়) + variant NOT NULL
         if ($this->hasForeignKeyOnColumn('cart_items', 'product_id')) {
             Schema::table('cart_items', function (Blueprint $table) {
                 $table->dropForeign(['product_id']);
@@ -85,15 +93,13 @@ return new class extends Migration
             });
         }
 
-        // ৪) নতুন FK cascadeOnDelete
-        //    নোট: InnoDB বিদ্যমান `..._product_variant_id_foreign` KEY-টিই FK-support হিসেবে
-        //    পুনঃব্যবহার করে — তাই এই index ইচ্ছাকৃতভাবে রাখা হয়।
-        if (! $this->hasForeignKeyOnColumn('cart_items', 'product_variant_id')) {
-            Schema::table('cart_items', function (Blueprint $table) {
-                $table->foreign('product_variant_id')
-                    ->references('id')->on('product_variants')->cascadeOnDelete();
-            });
-        }
+        // ৫) FK cascadeOnDelete — নতুন করে তৈরি।
+        //    নোট: InnoDB `..._product_variant_id_foreign` INDEX-টিই FK-support হিসেবে
+        //    পুনঃব্যবহার করে — dropForeign শুধু constraint ফেলে, index রাখে।
+        Schema::table('cart_items', function (Blueprint $table) {
+            $table->foreign('product_variant_id')
+                ->references('id')->on('product_variants')->cascadeOnDelete();
+        });
 
         // ---------- wishlist_items ----------
         // ১) নতুন unique আগে — user_id FK support ধরে রাখতে
@@ -124,9 +130,21 @@ return new class extends Migration
 
     public function down(): void
     {
+        // ---------- wishlist_items ----------
+        // নতুন unique drop করে পুরনো composite ফেরানো
+        Schema::table('wishlist_items', function (Blueprint $table) {
+            $table->dropUnique(['user_id', 'product_id']);
+        });
+
         Schema::table('wishlist_items', function (Blueprint $table) {
             $table->foreignId('product_variant_id')->nullable()->constrained()->nullOnDelete();
             $table->unique(['user_id', 'product_id', 'product_variant_id']);
+        });
+
+        // ---------- cart_items ----------
+        // নতুন unique drop করে পুরনো composite ফেরানো
+        Schema::table('cart_items', function (Blueprint $table) {
+            $table->dropUnique(['cart_id', 'product_variant_id']);
         });
 
         Schema::table('cart_items', function (Blueprint $table) {
@@ -139,6 +157,7 @@ return new class extends Migration
             $table->unique(['cart_id', 'product_id', 'product_variant_id']);
         });
 
+        // ---------- carts ----------
         Schema::table('carts', function (Blueprint $table) {
             $table->dropUnique('carts_user_id_unique');
             $table->dropColumn('currency');
