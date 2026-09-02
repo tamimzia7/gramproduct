@@ -21,18 +21,19 @@
     <div class="row g-3 mb-4">
         @php
             $kpiCards = [
+                ['label' => 'মোট বিক্রয়', 'value' => $kpis['total_sales'], 'icon' => 'bi-graph-up-arrow', 'color' => 'success', 'sub' => 'নির্বাচিত রেঞ্জ', 'money' => true],
                 ['label' => 'আজকের বিক্রয়', 'value' => $kpis['today_sales'], 'icon' => 'bi-cash-stack', 'color' => 'success', 'sub' => 'আজ', 'money' => true],
+                ['label' => 'মোট অর্ডার', 'value' => $kpis['total_orders'], 'icon' => 'bi-collection', 'color' => 'primary', 'sub' => 'নির্বাচিত রেঞ্জ', 'money' => false],
                 ['label' => 'আজকের অর্ডার', 'value' => $kpis['today_orders'], 'icon' => 'bi-receipt', 'color' => 'primary', 'sub' => 'আজ', 'money' => false],
-                ['label' => 'মোট বিক্রয় (রেঞ্জ)', 'value' => $kpis['total_sales'], 'icon' => 'bi-graph-up-arrow', 'color' => 'success', 'sub' => 'নির্বাচিত রেঞ্জ', 'money' => true],
-                ['label' => 'মোট অর্ডার (রেঞ্জ)', 'value' => $kpis['total_orders'], 'icon' => 'bi-collection', 'color' => 'primary', 'sub' => 'নির্বাচিত রেঞ্জ', 'money' => false],
-                ['label' => 'মোট ক্রেতা', 'value' => $kpis['customers'], 'icon' => 'bi-people', 'color' => 'info', 'sub' => 'সব', 'money' => false],
+                ['label' => 'মোট গ্রাহক', 'value' => $kpis['customers'], 'icon' => 'bi-people', 'color' => 'info', 'sub' => 'সব', 'money' => false],
                 ['label' => 'মোট পণ্য', 'value' => $kpis['products'], 'icon' => 'bi-box-seam', 'color' => 'secondary', 'sub' => 'সব', 'money' => false],
-                ['label' => 'অপেক্ষমাণ অর্ডার', 'value' => $kpis['pending_orders'], 'icon' => 'bi-hourglass-split', 'color' => 'warning', 'sub' => 'pending', 'money' => false],
-                ['label' => 'কম স্টক', 'value' => $kpis['low_stock'], 'icon' => 'bi-exclamation-triangle', 'color' => 'danger', 'sub' => 'সতর্কতা', 'money' => false],
+                ['label' => 'মোট কৃষক', 'value' => $kpis['farmers'], 'icon' => 'bi-person-arms-up', 'color' => 'warning', 'sub' => 'সব', 'money' => false],
+                ['label' => 'মোট মজুদ', 'value' => $kpis['total_stock'], 'icon' => 'bi-stack', 'color' => 'info', 'sub' => 'ইউনিট', 'money' => false],
+                ['label' => 'কম মজুদের পণ্য', 'value' => $kpis['low_stock'], 'icon' => 'bi-exclamation-triangle', 'color' => 'danger', 'sub' => 'সতর্কতা', 'money' => false],
             ];
         @endphp
         @foreach ($kpiCards as $card)
-            <div class="col-6 col-xl-3">
+            <div class="col-6 col-lg-4 col-xl-3">
                 <div class="admin-card admin-kpi p-3 h-100">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
@@ -49,6 +50,53 @@
         @endforeach
     </div>
 
+    {{-- দ্রুত কার্যক্রম --}}
+    <div class="admin-card mb-4">
+        <div class="admin-card__header">
+            <span>দ্রুত কার্যক্রম</span>
+        </div>
+        <div class="admin-card__body">
+            <div class="d-flex flex-wrap gap-2">
+                @can('products.create')
+                    <a href="{{ route('admin.products.create') }}" class="btn btn-sm btn-success">
+                        <i class="bi bi-plus-circle me-1"></i>নতুন পণ্য যোগ করুন
+                    </a>
+                @endcan
+                @can('categories.create')
+                    <a href="{{ route('admin.categories.create') }}" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-plus-circle me-1"></i>নতুন ক্যাটাগরি যোগ করুন
+                    </a>
+                @endcan
+                @can('categories.create')
+                    <a href="{{ route('admin.categories.create', ['type' => 'rice']) }}" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-plus-circle me-1"></i>নতুন চালের ক্যাটাগরি যোগ করুন
+                    </a>
+                @endcan
+                @can('coupons.create')
+                    @if (\Illuminate\Support\Facades\Route::has('admin.coupons.create'))
+                        <a href="{{ route('admin.coupons.create') }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus-circle me-1"></i>নতুন কুপন তৈরি করুন
+                        </a>
+                    @endif
+                @endcan
+                @can('farmers.create')
+                    @if (\Illuminate\Support\Facades\Route::has('admin.farmers.create'))
+                        <a href="{{ route('admin.farmers.create') }}" class="btn btn-sm btn-outline-warning">
+                            <i class="bi bi-plus-circle me-1"></i>নতুন কৃষক যোগ করুন
+                        </a>
+                    @endif
+                @endcan
+                @can('orders.view')
+                    @if (\Illuminate\Support\Facades\Route::has('admin.orders.index'))
+                        <a href="{{ route('admin.orders.index') }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-receipt me-1"></i>অর্ডার দেখুন
+                        </a>
+                    @endif
+                @endcan
+            </div>
+        </div>
+    </div>
+
     <div class="row g-3 mb-4">
         {{-- বিক্রয় চার্ট --}}
         <div class="col-lg-8">
@@ -60,7 +108,7 @@
                 <div class="admin-card__body">
                     <canvas id="salesChart" height="120" data-labels='@json($salesSeries['labels'])' data-values='@json($salesSeries['values'])'></canvas>
                     @if (empty(array_filter($salesSeries['values'])))
-                        <div class="text-center text-muted small py-3">এই রেঞ্জে কোনো বিক্রয় ডেটা নেই।</div>
+                        <div class="text-center text-muted small py-3">এই রেঞ্জে কোনো বিক্রয় তথ্য পাওয়া যায়নি।</div>
                     @endif
                 </div>
             </div>
@@ -92,7 +140,10 @@
                 <div class="admin-card__header"><span>সর্বাধিক বিক্রিত পণ্য</span></div>
                 <div class="admin-card__body p-0">
                     @if (empty($topProducts))
-                        <div class="text-center text-muted small py-5">এই রেঞ্জে কোনো বিক্রয় ডেটা নেই।</div>
+                        <div class="text-center text-muted small py-5">
+                            <i class="bi bi-box-seam d-block mb-2" style="font-size:2rem;opacity:.3;"></i>
+                            এই রেঞ্জে কোনো বিক্রয় তথ্য পাওয়া যায়নি।
+                        </div>
                     @else
                         <div class="table-responsive">
                             <table class="table admin-table mb-0">
@@ -125,26 +176,39 @@
         <div class="col-lg-5">
             <div class="admin-card h-100">
                 <div class="admin-card__header d-flex">
-                    <span>কম স্টক সতর্কতা</span>
+                    <span>কম মজুদের সতর্কতা</span>
                     @can('inventory.view')
                         <a href="{{ route('admin.inventory.index') }}" class="small text-decoration-none">সব দেখুন →</a>
                     @endcan
                 </div>
                 <div class="admin-card__body p-0">
                     @if ($lowStock->isEmpty())
-                        <div class="text-center text-muted small py-5">কোনো কম-স্টক পণ্য নেই।</div>
+                        <div class="text-center text-muted small py-5">
+                            <i class="bi bi-check-circle d-block mb-2" style="font-size:2rem;opacity:.3;"></i>
+                            কোনো কম মজুদের পণ্য নেই।
+                        </div>
                     @else
                         <div class="table-responsive">
                             <table class="table admin-table mb-0">
                                 <thead>
                                     <tr>
                                         <th>পণ্য / ভ্যারিয়েন্ট</th>
-                                        <th class="text-center">বর্তমান স্টক</th>
+                                        <th class="text-center">বর্তমান মজুদ</th>
                                         <th class="text-center">সতর্কতা সীমা</th>
+                                        <th>অবস্থা</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($lowStock as $inv)
+                                        @php
+                                            $available = $inv->available_quantity;
+                                            if ($available <= 0) {
+                                                $stockStatus = ['text-bg-danger', 'শেষ'];
+                                            } else {
+                                                $stockStatus = ['text-bg-warning text-dark', 'কম'];
+                                            }
+                                        @endphp
                                         <tr>
                                             <td>
                                                 <div class="fw-semibold">{{ $inv->variant?->product?->name ?? '—' }}</div>
@@ -152,6 +216,14 @@
                                             </td>
                                             <td class="text-center text-danger fw-semibold">{{ \App\Support\BengaliNumber::format($inv->available_quantity) }}</td>
                                             <td class="text-center">{{ \App\Support\BengaliNumber::format($inv->low_stock_threshold) }}</td>
+                                            <td><span class="badge {{ $stockStatus[0] }} admin-badge">{{ $stockStatus[1] }}</span></td>
+                                            <td class="text-end">
+                                                @can('inventory.create')
+                                                    <a href="{{ route('admin.inventory.add-form', $inv) }}" class="btn btn-sm btn-outline-success" title="মজুদ যোগ করুন">
+                                                        <i class="bi bi-plus"></i>
+                                                    </a>
+                                                @endcan
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -175,37 +247,73 @@
         </div>
         <div class="admin-card__body p-0">
             @if ($recentOrders->isEmpty())
-                <div class="text-center text-muted small py-5">এই রেঞ্জে কোনো অর্ডার নেই।</div>
+                <div class="text-center text-muted small py-5">
+                    <i class="bi bi-receipt d-block mb-2" style="font-size:2rem;opacity:.3;"></i>
+                    এখনও কোনো অর্ডার পাওয়া যায়নি।
+                </div>
             @else
                 <div class="table-responsive">
                     <table class="table admin-table mb-0">
                         <thead>
                             <tr>
                                 <th>অর্ডার নম্বর</th>
-                                <th>ক্রেতা</th>
-                                <th>মোট</th>
-                                <th>অবস্থা</th>
+                                <th>গ্রাহক</th>
+                                <th>মোট মূল্য</th>
                                 <th>পেমেন্ট</th>
+                                <th>অর্ডারের অবস্থা</th>
                                 <th>তারিখ</th>
-                                <th class="text-end">অ্যাকশন</th>
+                                <th class="text-end">কার্যক্রম</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($recentOrders as $order)
                                 <tr>
-                                    <td><a href="{{ route('admin.orders.show', $order) }}" class="text-decoration-none fw-semibold">#{{ $order->order_number }}</a></td>
+                                    <td>
+                                        @if (\Illuminate\Support\Facades\Route::has('admin.orders.show'))
+                                            <a href="{{ route('admin.orders.show', $order) }}" class="text-decoration-none fw-semibold">#{{ $order->order_number }}</a>
+                                        @else
+                                            <span class="fw-semibold">#{{ $order->order_number }}</span>
+                                        @endif
+                                    </td>
                                     <td>{{ $order->user?->name ?? $order->receiver_name }}</td>
                                     <td class="fw-semibold">{{ \App\Support\BengaliNumber::money($order->grand_total) }}</td>
+                                    <td>
+                                        @php
+                                            $paymentBadges = [
+                                                'paid' => 'text-bg-success',
+                                                'unpaid' => 'text-bg-warning text-dark',
+                                                'partial' => 'text-bg-info',
+                                                'refunded' => 'text-bg-secondary',
+                                            ];
+                                            $paymentLabels = [
+                                                'paid' => 'পরিশোধিত',
+                                                'unpaid' => 'অপরিশোধিত',
+                                                'partial' => 'আংশিক',
+                                                'refunded' => 'ফেরত',
+                                            ];
+                                        @endphp
+                                        <span class="badge {{ $paymentBadges[$order->payment_status] ?? 'text-bg-secondary' }} admin-badge">
+                                            {{ $paymentLabels[$order->payment_status] ?? $order->payment_status }}
+                                        </span>
+                                    </td>
                                     <td>
                                         @php
                                             $os = \App\Enums\OrderStatus::tryFrom($order->status);
                                         @endphp
                                         <span class="badge {{ $os?->badgeClass() ?? 'text-bg-secondary' }} admin-badge">{{ $os?->label() ?? $order->status }}</span>
                                     </td>
-                                    <td><small class="text-muted">{{ $order->payment_status }}</small></td>
                                     <td><small class="text-muted">{{ $order->created_at->format('d M, Y h:i A') }}</small></td>
                                     <td class="text-end row-actions">
-                                        <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
+                                        @if (\Illuminate\Support\Facades\Route::has('admin.orders.show'))
+                                            <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-outline-secondary" title="দেখুন">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        @endif
+                                        @if (\Illuminate\Support\Facades\Route::has('admin.orders.edit'))
+                                            <a href="{{ route('admin.orders.edit', $order) }}" class="btn btn-sm btn-outline-primary" title="সম্পাদনা">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach

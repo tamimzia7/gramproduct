@@ -249,6 +249,9 @@ body.admin-sidebar-collapsed .admin-sidebar__brand-logo { width: 38px; height: 3
 /* ---------- Status badges ---------- */
 .admin-badge { font-weight: 600; font-size: 0.72rem; letter-spacing: 0.02em; }
 
+/* ---------- Quick actions ---------- */
+.admin-card .btn + .btn { margin-left: 0; }
+
 /* ---------- Alerts ---------- */
 .admin-alert { border-radius: 10px; }
 
@@ -284,7 +287,17 @@ body.admin-sidebar-collapsed .admin-sidebar__brand-logo { width: 38px; height: 3
     body.admin-sidebar-collapsed .admin-sidebar__footer-text { display: inline; }
     body.admin-sidebar-collapsed .admin-nav-link { justify-content: flex-start; padding: 8px 10px; }
     body.admin-sidebar-collapsed .admin-nav-link .bi { width: 20px; }
-    body.admin-sidebar-collapsed .admin-admin-sidebar__brand { justify-content: flex-start; }
+    body.admin-sidebar-collapsed .admin-sidebar__brand { justify-content: flex-start; }
     .admin-topbar__title { display: none; }
     .admin-content { padding: 14px; }
+    .admin-kpi__value { font-size: 1.3rem; }
+    .admin-page-head { flex-direction: column; }
+}
+
+@media (max-width: 575.98px) {
+    .admin-kpi__icon { width: 36px; height: 36px; font-size: 1rem; }
+    .admin-kpi__value { font-size: 1.15rem; }
+    .admin-kpi__label { font-size: 0.78rem; }
+    .admin-card__header { padding: 10px 14px; font-size: 0.9rem; }
+    .admin-card__body { padding: 12px; }
 }

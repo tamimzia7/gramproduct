@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -32,13 +33,15 @@ class DashboardController extends Controller
             'salesSeries' => $this->salesSeries($start, $end),
             'statusCounts' => $this->statusCounts($end),
             'topProducts' => $this->topProducts($start, $end),
-            'recentOrders' => $this->recentOrders($start, $end),
+            'recentOrders' => $this->recentOrders(),
             'lowStock' => $this->lowStock(),
             'range' => $range,
             'stats' => [
                 'products' => Product::withTrashed()->count(),
                 'categories' => Category::withTrashed()->count(),
                 'customers' => User::whereDoesntHave('roles')->count(),
+                'farmers' => User::whereHas('roles', fn ($q) => $q->where('slug', 'farmer'))->count(),
+                'total_stock' => Inventory::sum('quantity'),
             ],
         ]);
     }
@@ -46,8 +49,6 @@ class DashboardController extends Controller
     /**
      * KPI গণনা — dashboard-এর শীর্ষ কার্ড।
      *
-     * @param  Carbon  $start
-     * @param  Carbon  $end
      * @return array<string, mixed>
      */
     private function kpis(Carbon $start, Carbon $end): array
@@ -66,7 +67,8 @@ class DashboardController extends Controller
             'total_orders' => Order::whereBetween('created_at', [$start, $end])->count(),
             'customers' => User::whereDoesntHave('roles')->count(),
             'products' => Product::withTrashed()->count(),
-            'pending_orders' => Order::where('status', OrderStatus::PENDING->value)->count(),
+            'farmers' => User::whereHas('roles', fn ($q) => $q->where('slug', 'farmer'))->count(),
+            'total_stock' => Inventory::sum('quantity'),
             'low_stock' => Inventory::query()
                 ->whereColumn('quantity', '>', 'reserved_quantity')
                 ->whereColumn('quantity', '<=', 'low_stock_threshold')
@@ -90,7 +92,7 @@ class DashboardController extends Controller
     {
         $grouped = Order::where('status', '!=', OrderStatus::CANCELLED->value)
             ->whereBetween('created_at', [$start->copy()->startOfDay(), $end->copy()->endOfDay()])
-            ->selectRaw("DATE(created_at) as d, SUM(grand_total) as revenue, COUNT(*) as count")
+            ->selectRaw('DATE(created_at) as d, SUM(grand_total) as revenue, COUNT(*) as count')
             ->groupBy('d')
             ->orderBy('d')
             ->pluck('revenue', 'd');
@@ -102,7 +104,6 @@ class DashboardController extends Controller
         $cursor = $start->copy()->startOfDay();
         $limit = $cursor->diffInDays($end->copy()->endOfDay()) + 1;
 
-        // অতি বড় রেঞ্জ হলে দিন বদলে সপ্তাহ/মাসে agg
         if ($limit > 366) {
             $cursor = $start->copy()->startOfMonth();
         }
@@ -178,12 +179,11 @@ class DashboardController extends Controller
     /**
      * সাম্প্রতিক অর্ডার।
      *
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     * @return Collection
      */
-    private function recentOrders(Carbon $start, Carbon $end)
+    private function recentOrders()
     {
         return Order::with('user')
-            ->whereBetween('created_at', [$start->copy()->startOfDay(), $end->copy()->endOfDay()])
             ->latest()
             ->limit(10)
             ->get();
@@ -224,7 +224,7 @@ class DashboardController extends Controller
                 $request->input('from') ? Carbon::parse($request->input('from'))->startOfDay() : $now->copy()->startOfMonth(),
                 $request->input('to') ? Carbon::parse($request->input('to'))->endOfDay() : $now->copy()->endOfDay(),
             ],
-            default => [$now->copy()->startOfDay(), $now->copy()->endOfDay()], // today
+            default => [$now->copy()->startOfDay(), $now->copy()->endOfDay()],
         };
     }
 }
