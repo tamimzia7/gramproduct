@@ -21,6 +21,7 @@ class Product extends Model
     protected $fillable = [
         'category_id',
         'name',
+        'name_bn',
         'sku',
         'slug',
         'short_description',
@@ -30,6 +31,10 @@ class Product extends Model
         'discount_price',
         'compare_at_price',
         'unit',
+        'weight',
+        'brand',
+        'tags',
+        'low_stock_threshold',
         'product_type',
         'is_featured',
         'is_bestseller',
@@ -51,6 +56,8 @@ class Product extends Model
         'discount_price' => 'decimal:2',
         'compare_at_price' => 'decimal:2',
         'unit' => ProductUnit::class,
+        'weight' => 'decimal:2',
+        'low_stock_threshold' => 'integer',
         'is_featured' => 'boolean',
         'is_bestseller' => 'boolean',
         'is_new_arrival' => 'boolean',
@@ -158,6 +165,28 @@ class Product extends Model
     public function isActive(): bool
     {
         return (bool) $this->is_active;
+    }
+
+    /**
+     * পণ্যের প্রদর্শন নাম — বাংলা নাম থাকলে সেটি, নইলে মূল নাম
+     */
+    public function displayName(): string
+    {
+        return $this->name_bn ?: $this->name;
+    }
+
+    /**
+     * ট্যাগ লিস্ট — কমা দিয়ে আলাদা করা ট্যাগ
+     *
+     * @return array<int, string>
+     */
+    public function tagsArray(): array
+    {
+        if (! $this->tags) {
+            return [];
+        }
+
+        return array_map('trim', explode(',', $this->tags));
     }
 
     /**

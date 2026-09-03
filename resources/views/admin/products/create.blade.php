@@ -43,6 +43,17 @@
                                 @enderror
                             </div>
 
+                            <div class="col-md-6">
+                                <label for="name_bn" class="form-label">পণ্যের বাংলা নাম</label>
+                                <input type="text" id="name_bn" name="name_bn"
+                                       class="form-control @error('name_bn') is-invalid @enderror"
+                                       value="{{ old('name_bn') }}"
+                                       placeholder="যেমন: নাজিরশাইল চাল">
+                                @error('name_bn')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
                             <div class="col-md-3">
                                 <label for="sku" class="form-label">SKU</label>
                                 <input type="text" id="sku" name="sku"
@@ -73,7 +84,7 @@
                                     <option value="">— ক্যাটাগরি নির্বাচন করুন —</option>
                                     @foreach ($categories as $category)
                                         <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                            {{ $category->name }}
+                                            {{ $category->display_name ?? $category->name }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -95,6 +106,38 @@
                                 @error('unit')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="weight" class="form-label">ওজন (কেজি)</label>
+                                <input type="number" step="0.01" min="0" id="weight" name="weight"
+                                       class="form-control @error('weight') is-invalid @enderror"
+                                       value="{{ old('weight') }}">
+                                @error('weight')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="brand" class="form-label">ব্র্যান্ড</label>
+                                <input type="text" id="brand" name="brand"
+                                       class="form-control @error('brand') is-invalid @enderror"
+                                       value="{{ old('brand') }}">
+                                @error('brand')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="tags" class="form-label">ট্যাগ</label>
+                                <input type="text" id="tags" name="tags"
+                                       class="form-control @error('tags') is-invalid @enderror"
+                                       value="{{ old('tags') }}"
+                                       placeholder="কমা দিয়ে আলাদা করুন: চাল, জৈব, গ্রামীণ">
+                                @error('tags')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <div class="form-text">কমা দিয়ে একাধিক ট্যাগ দিন।</div>
                             </div>
 
                             <div class="col-md-3">
@@ -265,6 +308,17 @@
                             @error('stock_status')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="low_stock_threshold" class="form-label">মজুদের সতর্কতা সীমা</label>
+                            <input type="number" id="low_stock_threshold" name="low_stock_threshold"
+                                   min="0"
+                                   class="form-control @error('low_stock_threshold') is-invalid @enderror"
+                                   value="{{ old('low_stock_threshold', 5) }}">
+                            @error('low_stock_threshold')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text">এই সংখ্যার কম স্টক থাকলে সতর্কতা দেখাবে।</div>
                         </div>
 
                         <div class="form-check form-switch mb-2">

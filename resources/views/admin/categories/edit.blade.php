@@ -61,7 +61,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="slug" class="form-label">Slug</label>
+                            <label for="slug" class="form-label">স্লাগ</label>
                             <input type="text" id="slug" name="slug"
                                    class="form-control @error('slug') is-invalid @enderror"
                                    value="{{ old('slug', $category->slug) }}">

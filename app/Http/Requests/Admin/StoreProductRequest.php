@@ -18,6 +18,7 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'name_bn' => ['nullable', 'string', 'max:255'],
             'sku' => ['nullable', 'string', 'max:50', 'unique:products,sku'],
             'slug' => ['nullable', 'string', 'max:255', 'unique:products,slug'],
             'category_id' => ['required', 'integer', 'exists:categories,id'],
@@ -27,6 +28,10 @@ class StoreProductRequest extends FormRequest
             'discount_price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99', 'lte:base_price'],
             'compare_at_price' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'unit' => ['nullable', Rule::in(ProductUnit::values())],
+            'weight' => ['nullable', 'numeric', 'min:0'],
+            'brand' => ['nullable', 'string', 'max:255'],
+            'tags' => ['nullable', 'string', 'max:500'],
+            'low_stock_threshold' => ['nullable', 'integer', 'min:0'],
             'product_type' => ['nullable', 'string', 'max:50'],
             'stock_status' => ['required', Rule::in(StockStatus::values())],
             'is_active' => ['boolean'],
@@ -55,6 +60,7 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'name' => 'পণ্যের নাম',
+            'name_bn' => 'পণ্যের বাংলা নাম',
             'sku' => 'SKU',
             'slug' => 'স্লাগ',
             'category_id' => 'ক্যাটাগরি',
@@ -64,6 +70,10 @@ class StoreProductRequest extends FormRequest
             'discount_price' => 'বিক্রয় মূল্য',
             'compare_at_price' => 'আগের মূল্য',
             'unit' => 'একক',
+            'weight' => 'ওজন',
+            'brand' => 'ব্র্যান্ড',
+            'tags' => 'ট্যাগ',
+            'low_stock_threshold' => 'মজুদের সতর্কতা সীমা',
             'product_type' => 'পণ্যের ধরন',
             'stock_status' => 'স্টক স্ট্যাটাস',
             'sort_order' => 'প্রদর্শনের ক্রম',

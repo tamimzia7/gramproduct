@@ -87,6 +87,7 @@
                                 <th class="text-center">ফিচার্ড</th>
                                 <th class="text-center">ক্রম</th>
                                 <th class="text-center">সাব-ক্যাটাগরি</th>
+                                <th class="text-center">পণ্য সংখ্যা</th>
                                 <th class="text-end">অ্যাকশন</th>
                             </tr>
                         </thead>
@@ -146,6 +147,11 @@
                                     <td class="text-center">{{ $category->sort_order }}</td>
                                     <td class="text-center">
                                         {{ $category->children_count ?? $category->children()->count() }}
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge text-bg-light border">
+                                            {{ \App\Support\BengaliNumber::format($category->products_count) }} টি
+                                        </span>
                                     </td>
                                     <td class="text-end">
                                         <div class="btn-group btn-group-sm">

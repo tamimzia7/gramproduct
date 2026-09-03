@@ -3,11 +3,11 @@
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\InventoryController as AdminInventoryController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductImageController as AdminProductImageController;
 use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantController;
+use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
@@ -98,6 +98,8 @@ Route::middleware(['auth', 'can:admin.access'])->prefix('admin')->name('admin.')
     Route::patch('categories/{id}/restore', [AdminCategoryController::class, 'restore'])->name('categories.restore');
 
     Route::resource('products', AdminProductController::class);
+    Route::patch('products/{id}/restore', [AdminProductController::class, 'restore'])->name('products.restore');
+    Route::post('products/bulk-action', [AdminProductController::class, 'bulkAction'])->name('products.bulk-action');
     Route::patch('products/{product}/images/{image}/primary', [AdminProductImageController::class, 'makePrimary'])
         ->name('products.images.primary');
     Route::delete('products/{product}/images/{image}', [AdminProductImageController::class, 'destroy'])

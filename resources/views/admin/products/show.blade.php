@@ -43,6 +43,12 @@
                             <th style="width:180px;" class="text-muted">পণ্যের নাম</th>
                             <td>{{ $product->name }}</td>
                         </tr>
+                        @if ($product->name_bn)
+                            <tr>
+                                <th class="text-muted">বাংলা নাম</th>
+                                <td>{{ $product->name_bn }}</td>
+                            </tr>
+                        @endif
                         <tr>
                             <th class="text-muted">SKU</th>
                             <td><code>{{ $product->sku ?? '—' }}</code></td>
@@ -59,6 +65,28 @@
                             <th class="text-muted">একক</th>
                             <td>{{ $product->unitLabel() ?: '—' }}</td>
                         </tr>
+                        @if ($product->weight)
+                            <tr>
+                                <th class="text-muted">ওজন</th>
+                                <td>{{ \App\Support\BengaliNumber::format($product->weight) }} কেজি</td>
+                            </tr>
+                        @endif
+                        @if ($product->brand)
+                            <tr>
+                                <th class="text-muted">ব্র্যান্ড</th>
+                                <td>{{ $product->brand }}</td>
+                            </tr>
+                        @endif
+                        @if ($product->tags)
+                            <tr>
+                                <th class="text-muted">ট্যাগ</th>
+                                <td>
+                                    @foreach ($product->tagsArray() as $tag)
+                                        <span class="badge text-bg-light border">{{ $tag }}</span>
+                                    @endforeach
+                                </td>
+                            </tr>
+                        @endif
                         <tr>
                             <th class="text-muted">মূল্য</th>
                             <td>@price($product->effectivePrice(), $product->unitLabel())</td>
@@ -66,6 +94,10 @@
                         <tr>
                             <th class="text-muted">আগের মূল্য</th>
                             <td>{{ $product->compare_at_price ? \App\Support\BengaliNumber::money($product->compare_at_price) : '—' }}</td>
+                        </tr>
+                        <tr>
+                            <th class="text-muted">মজুদের সতর্কতা সীমা</th>
+                            <td>{{ \App\Support\BengaliNumber::format($product->low_stock_threshold) }} টি</td>
                         </tr>
                         <tr>
                             <th class="text-muted">স্ট্যাটাস</th>

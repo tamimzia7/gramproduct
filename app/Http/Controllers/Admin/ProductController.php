@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\CategoryService;
 use App\Services\ProductService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ class ProductController extends Controller
 {
     public function __construct(
         private ProductService $productService,
+        private CategoryService $categoryService,
     ) {}
 
     /**
@@ -27,7 +29,7 @@ class ProductController extends Controller
     {
         $this->authorize('viewAny', Product::class);
 
-        $query = Product::with(['category', 'primaryImage']);
+        $query = Product::with(['category', 'primaryImage', 'activeVariants.inventory']);
 
         // নাম বা SKU দিয়ে খোঁজা
         if ($search = $request->input('search')) {
@@ -50,6 +52,20 @@ class ProductController extends Controller
             $query->bestseller();
         }
 
+        if ($request->filled('stock')) {
+            $stock = $request->input('stock');
+            if ($stock === 'in_stock') {
+                $query->where('stock_status', 'in_stock');
+            } elseif ($stock === 'out_of_stock') {
+                $query->where('stock_status', 'out_of_stock');
+            }
+        }
+
+        // মুছে ফেলা পণ্য দেখানোর অপশন
+        if ($request->boolean('trashed')) {
+            $query->onlyTrashed();
+        }
+
         $products = $query->ordered()
             ->orderByDesc('created_at')
             ->paginate(15)
@@ -67,7 +83,7 @@ class ProductController extends Controller
     {
         $this->authorize('create', Product::class);
 
-        $categories = Category::orderBy('name')->get();
+        $categories = $this->categoryService->getHierarchicalCategories();
         $units = ProductUnit::cases();
 
         return view('admin.products.create', compact('categories', 'units'));
@@ -130,7 +146,7 @@ class ProductController extends Controller
         $this->authorize('update', $product);
 
         $product->load('images');
-        $categories = Category::orderBy('name')->get();
+        $categories = $this->categoryService->getHierarchicalCategories();
         $units = ProductUnit::cases();
 
         return view('admin.products.edit', compact('product', 'categories', 'units'));
@@ -193,6 +209,55 @@ class ProductController extends Controller
     }
 
     /**
+     * মুছে ফেলা পণ্য পুনরুদ্ধার
+     */
+    public function restore(int $id): RedirectResponse
+    {
+        $product = Product::withTrashed()->findOrFail($id);
+        $product->restore();
+
+        return redirect()
+            ->route('admin.products.index')
+            ->with('success', 'পণ্যটি সফলভাবে পুনরুদ্ধার হয়েছে।');
+    }
+
+    /**
+     * বাল্ক অ্যাকশন — সক্রিয়/নিষ্ক্রিয়/মুছে ফেলা
+     */
+    public function bulkAction(Request $request): RedirectResponse
+    {
+        $this->authorize('delete', Product::class);
+
+        $request->validate([
+            'ids' => ['required', 'array'],
+            'action' => ['required', 'in:activate,deactivate,delete'],
+        ], [
+            'ids.required' => 'অনুগ্রহ করে অন্তত একটি পণ্য নির্বাচন করুন।',
+            'ids.array' => 'নির্বাচিত পণ্যগুলো সঠিক নয়।',
+            'action.required' => 'অ্যাকশন নির্বাচন করুন।',
+            'action.in' => 'অ্যাকশন সঠিক নয়।',
+        ]);
+
+        $ids = $request->input('ids');
+        $action = $request->input('action');
+
+        $message = match ($action) {
+            'activate' => Product::whereIn('id', $ids)->update(['is_active' => true])
+                ? count($ids).'টি পণ্য সক্রিয় করা হয়েছে।'
+                : 'পণ্য সক্রিয় করা যায়নি।',
+            'deactivate' => Product::whereIn('id', $ids)->update(['is_active' => false])
+                ? count($ids).'টি পণ্য নিষ্ক্রিয় করা হয়েছে।'
+                : 'পণ্য নিষ্ক্রিয় করা যায়নি।',
+            'delete' => Product::whereIn('id', $ids)->delete()
+                ? count($ids).'টি পণ্য মুছে ফেলা হয়েছে।'
+                : 'পণ্য মুছে ফেলা যায়নি。',
+            default => 'অজানা অ্যাকশন।',
+        };
+
+        return redirect()->route('admin.products.index')->with('success', $message);
+    }
+
+    /**
      * Request ডেটা থেকে model-এ লেখার উপযোগী array তৈরি
      *
      * @return array<string, mixed>
@@ -206,6 +271,7 @@ class ProductController extends Controller
         }
 
         $data['sort_order'] = $data['sort_order'] ?? 0;
+        $data['low_stock_threshold'] = $data['low_stock_threshold'] ?? 5;
 
         return $data;
     }

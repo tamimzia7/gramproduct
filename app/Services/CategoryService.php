@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Category;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -150,5 +151,36 @@ class CategoryService
         }
 
         return $flat;
+    }
+
+    /**
+     * Build a hierarchical list of categories for product form dropdown.
+     * Only returns active categories with proper parent-child indentation.
+     *
+     * @return Collection<int, object>
+     */
+    public function getHierarchicalCategories(): Collection
+    {
+        $categories = Category::active()->ordered()->get();
+
+        $tree = collect();
+
+        foreach ($categories as $category) {
+            $depth = 0;
+            $current = $category;
+
+            while ($current->parent_id) {
+                $depth++;
+                $current = Category::find($current->parent_id);
+                if (! $current) {
+                    break;
+                }
+            }
+
+            $category->display_name = str_repeat('— ', $depth).$category->name;
+            $tree->push($category);
+        }
+
+        return $tree;
     }
 }

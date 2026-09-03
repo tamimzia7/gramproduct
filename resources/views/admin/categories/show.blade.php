@@ -40,7 +40,7 @@
                             <td>{{ $category->name }}</td>
                         </tr>
                         <tr>
-                            <th class="text-muted">Slug</th>
+                            <th class="text-muted">স্লাগ</th>
                             <td><code>{{ $category->slug }}</code></td>
                         </tr>
                         <tr>

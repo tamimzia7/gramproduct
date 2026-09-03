@@ -22,7 +22,8 @@ class CategoryController extends Controller
      */
     public function index(Request $request): View
     {
-        $query = Category::with('parent');
+        $query = Category::with('parent')
+            ->withCount(['products as products_count']);
 
         // Search by name
         if ($search = $request->input('search')) {
