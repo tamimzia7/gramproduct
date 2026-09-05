@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\CartItem;
 use App\Models\Category;
 use App\Models\User;
+use App\Models\WishlistItem;
 use App\Services\CartService;
 use App\Services\HomepageService;
 use Database\Seeders\RoleSeeder;
@@ -74,10 +76,32 @@ class AppServiceProvider extends ServiceProvider
             ]);
         });
 
-        // হেডারের লাইভ কার্ট-কাউন্ট — guest(session)/auth(user) উভয়ের জন্য
+        // হেডারের লাইভ কার্ট-কাউন্ট ও মোট মূল্য — guest(session)/auth(user) উভয়ের জন্য
         View::composer(['components.navbar'], function ($view): void {
-            $view->with('cartCount', app(CartService::class)
-                ->getItemCount(auth()->user(), session()->getId()));
+            $user = auth()->user();
+            $sessionId = session()->getId();
+            $cart = app(CartService::class)->getCart($user, $sessionId);
+
+            $items = $cart?->items()?->get() ?? collect();
+            $cartCount = (int) $items->sum('quantity');
+            $cartTotal = round((float) $items->sum(fn (CartItem $item) => $item->line_total), 2);
+
+            // হেডার ক্যাটাগরি তালিকা — মূল-স্তরের active ক্যাটাগরি (হালকা কুয়েরি)
+            $rootCategories = Category::query()
+                ->active()
+                ->rootLevel()
+                ->ordered()
+                ->get(['id', 'name', 'slug', 'parent_id']);
+
+            $view->with([
+                'cartCount' => $cartCount,
+                'cartTotal' => $cartTotal,
+                'wishlistCount' => $user
+                    ? WishlistItem::where('user_id', $user->id)->count()
+                    : 0,
+                'topCategories' => $rootCategories,
+                'navCategories' => $rootCategories,
+            ]);
         });
     }
 

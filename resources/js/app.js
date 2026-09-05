@@ -85,6 +85,21 @@ import 'bootstrap';
         }
     }
 
+    function formatBn(value) {
+        return new Intl.NumberFormat('bn-BD').format(value);
+    }
+
+    function updateHeaderCartTotal(subtotal) {
+        const totalEl = document.querySelector('.site-cart-total');
+        if (! totalEl) return;
+
+        if (typeof subtotal === 'number' && subtotal > 0) {
+            totalEl.textContent = '৳' + formatBn(subtotal);
+        } else {
+            totalEl.textContent = 'খালি';
+        }
+    }
+
     // ---------- কার্টে যোগ ----------
     document.addEventListener('click', async (event) => {
         const trigger = event.target.closest('[data-add-to-cart]');
@@ -108,6 +123,7 @@ import 'bootstrap';
         if (result.data.success) {
             toast(result.data.message, 'success');
             updateCartBadge(result.data.cart_count);
+            updateHeaderCartTotal(result.data.subtotal);
         } else {
             toast(result.data.message || 'দুঃখিত, কিছু সমস্যা হয়েছে। আবার চেষ্টা করুন।', 'error');
         }
@@ -152,14 +168,11 @@ import 'bootstrap';
     });
 
     // ---------- কার্ট পরিমাণ ও অপসারণ ----------
-    function formatBn(value) {
-        return new Intl.NumberFormat('bn-BD').format(value);
-    }
-
     function refreshTotals(data) {
         if (! data) return;
 
         updateCartBadge(data.cart_count);
+        updateHeaderCartTotal(data.subtotal);
 
         const subtotalEl = document.querySelector('.subtotal-value');
         const grandEl = document.querySelector('.grand-total');

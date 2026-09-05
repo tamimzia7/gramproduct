@@ -1,4 +1,5 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.min.css';
 
 /* Project base styles (Bootstrap 5 foundation) */
 body {
@@ -9,6 +10,295 @@ body {
 
 main {
     flex: 1 0 auto;
+}
+
+/* ==========================================================================
+   সাইট হেডার — শীর্ষ তথ্য বার + মূল হেডার + নেভিগেশন সারি
+   প্রাকৃতিক কৃষিজ সবুজ; হালকা বর্ডার; অতিরিক্ত ছায়া/গ্রেডিয়েন্ট নেই।
+   ========================================================================== */
+
+.site-header {
+    background: #fff;
+    z-index: 1030;
+}
+
+/* ---------- শীর্ষ সবুজ তথ্য বার ---------- */
+.site-topbar {
+    background: #14532d;
+    color: #e7f2e4;
+    font-size: 0.78rem;
+    letter-spacing: 0.01em;
+}
+
+.site-topbar .list-inline-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.site-topbar .bi {
+    color: #b6e0a9;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.site-topbar a {
+    color: #e7f2e4;
+    text-decoration: none;
+}
+
+.site-topbar a:hover {
+    color: #ffffff;
+}
+
+/* ---------- মূল হেডার ---------- */
+.site-main-header {
+    border-bottom: 1px solid #e8efe3;
+    background: #ffffff;
+}
+
+.site-logo {
+    max-height: 44px;
+    width: auto;
+}
+
+/* অনুসন্ধান */
+.site-search__inner {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    border: 2px solid #2f7d32;
+    border-radius: 999px;
+    background: #ffffff;
+    padding: 4px;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.site-search__inner:focus-within {
+    border-color: #256a28;
+    box-shadow: 0 0 0 4px rgba(47, 125, 50, 0.12);
+}
+
+.site-search__category {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: 180px;
+    border: 0;
+    border-radius: 999px 0 0 999px;
+    background: transparent;
+    color: #3c5c3f;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding-left: 0.9rem;
+    cursor: pointer;
+}
+
+.site-search__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+    font-size: 0.95rem;
+    padding: 0.55rem 0.75rem;
+}
+
+.site-search__input::placeholder {
+    color: #8aa089;
+}
+
+.site-search__input:focus {
+    box-shadow: none;
+}
+
+.site-search__submit {
+    flex: 0 0 auto;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #2f7d32;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.site-search__submit:hover,
+.site-search__submit:focus {
+    background: #256a28;
+    color: #ffffff;
+}
+
+.site-search__submit:focus-visible {
+    outline: 3px solid rgba(47, 125, 50, 0.4);
+    outline-offset: 2px;
+}
+
+/* ডান পাশ — অ্যাকশন আইকন */
+.site-action {
+    color: #2c3a2e;
+    white-space: nowrap;
+    padding: 0.35rem 0.5rem;
+    border-radius: 8px;
+    transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+a.site-action:hover,
+a.site-action:focus-visible {
+    background: #f1f7ee;
+    color: #2f7d32;
+}
+
+.site-action__btn {
+    border: 0;
+    background: transparent;
+    color: #2c3a2e;
+    padding: 0.35rem 0.5rem;
+    border-radius: 8px;
+}
+
+.site-action__btn:hover,
+.site-action__btn:focus,
+.site-action__btn.show {
+    background: #f1f7ee;
+    color: #2f7d32;
+}
+
+.site-action__btn::after {
+    display: none;
+}
+
+.site-action__title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #2c3a2e;
+}
+
+.site-action__sub {
+    font-size: 0.72rem;
+    color: #6b8a6a;
+}
+
+.site-action__btn:hover .site-action__title,
+.site-action__btn:hover .site-action__sub {
+    color: inherit;
+}
+
+.site-header .badge {
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 0.3em 0.45em;
+    min-width: 1.4em;
+}
+
+.account-menu .dropdown-item {
+    font-size: 0.9rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+/* ---------- নেভিগেশন সারি ---------- */
+.site-navbar {
+    background: #ffffff;
+    border-bottom: 1px solid #e8efe3;
+    padding: 0.45rem 0;
+}
+
+.site-categories-btn {
+    background: #2f7d32;
+    color: #ffffff;
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 0.55rem 1rem;
+    white-space: nowrap;
+    transition: background-color 0.18s ease;
+}
+
+.site-categories-btn:hover,
+.site-categories-btn:focus,
+.site-categories-btn.show {
+    background: #256a28;
+    color: #ffffff;
+}
+
+.site-categories-btn::after {
+    display: none;
+}
+
+.site-categories-menu {
+    min-width: 280px;
+    border: 1px solid #e8efe3;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(23, 58, 28, 0.1);
+    padding: 0.6rem;
+}
+
+.site-categories-menu .dropdown-item {
+    border-radius: 8px;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.9rem;
+}
+
+.site-categories-menu .dropdown-item:hover {
+    background: #f1f7ee;
+    color: #2f7d32;
+}
+
+.site-nav__link {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #2c3a2e;
+    text-decoration: none;
+    border-radius: 8px;
+    white-space: nowrap;
+    transition: color 0.18s ease, background-color 0.18s ease;
+}
+
+.site-nav__link:hover,
+.site-nav__link:focus-visible {
+    color: #2f7d32;
+    background: #f1f7ee;
+}
+
+.site-nav__link.active {
+    color: #2f7d32;
+}
+
+.site-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.site-nav {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+@media (max-width: 991.98px) {
+    /* মোবাইল/ট্যাবলেট — অনুসন্ধান ক্যাটাগরি সিলেক্ট সরু */
+    .site-search__category {
+        max-width: 110px;
+        font-size: 0.78rem;
+        padding-left: 0.6rem;
+    }
+
+    .site-search__submit {
+        width: 38px;
+        height: 38px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .site-search__inner,
+    .site-search__submit,
+    .site-action,
+    .site-action__btn,
+    .site-categories-btn,
+    .site-nav__link {
+        transition: none;
+    }
 }
 
 /* ==========================================================================
@@ -295,142 +585,291 @@ main {
 }
 
 /* ==========================================================================
-   Hero — তিনটি গ্রামীণ ছবির একটি অবিচ্ছিন্ন landscape composition
-   স্তর: b-image3 (ভিত্তি/গভীরতা) ← b-image1 (কৃষক/ধানক্ষেত, বামে)
-        ← b-image2 (বিল/মাছ, ডানে)
-   টেক্সট প্যানেল hero-র গাণিতিক কেন্দ্রে (flex center, কোনো hard-coded
-   margin/left offset নয়)। Mask-এর solid core বড় রাখা হয়েছে যাতে
-   স্তরগুলোর মধ্যে ghosting/duplicate-figure না দেখা যায় — fade শুধু
-   কেন্দ্রের seam-এ (প্যানেলের নিচে) ঘটে।
-   ছবিগুলো public/images/ থেকে সরাসরি আসছে (নতুন কোনো ফাইল নয়)।
+   Hero — পূর্ণ-প্রস্থ ধানক্ষেতের real ফটোগ্রাফি + ডানে কৃষকের figure
+   b-image3 (ধানক্ষেত landscape) = full-width ব্যাকগ্রাউন্ড
+   b-image1 (কৃষক ও ধান কাটা) = ডান কলামের farmer figure (field-এ মিশে যায়)
+   বামে বড় বাংলা হেডিং (কালো + সবুজ দুই লাইন) ও rounded CTA জোড়া
+   ছবিগুলো public/images/ থেকে সরাসরি আসছে (নতুন কোনো ফাইল নয়)
    ========================================================================== */
 
 .hero-scene {
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    min-height: 560px;
+    min-height: 640px;
     display: flex;
-    align-items: center;      /* vertical center */
-    justify-content: center;  /* horizontal center */
-    padding: 2.5rem 1rem;
-    background-color: #eef4ea; /* ছবি লোড হওয়া পর্যন্ত natural fallback */
+    align-items: center;      /* টেক্সট ও farmer figure বরাবর vertical center */
+    padding: 4rem 0;
+    background-color: #f2f7ee; /* ছবি লোড হওয়া পর্যন্ত natural fallback */
 }
 
-.hero-bg {
+/* পূর্ণ-প্রস্থ ধানক্ষেত (b-image3)। খুবই হালকা বাম-থেকে-মাঝ লাইটনিং শুধু
+   টেক্সট পড়ার সুবিধার্থে — ডান পাশে কোনো heavy wash/noir gradient নেই */
+.hero-banner__bg {
     position: absolute;
     inset: 0;
     z-index: -1;
-}
-
-/* ভিত্তি স্তর — b-image3: ধানক্ষেতের landscape গভীরতা (নিচের দিকে focus,
-   উপরের অংশ wash-এ মিশে distant-field হিসেবে থাকে — পৃথক মানুষ/figure
-   চোখে পড়ে না) */
-.hero-bg__base {
-    position: absolute;
-    inset: 0;
     background-image: url('/images/b-image3.jpg');
     background-size: cover;
-    background-position: center 78%;
+    background-position: center 72%;
 }
 
-.hero-bg__base::after {
+.hero-banner__bg::after {
     content: '';
     position: absolute;
     inset: 0;
-    background:
-        linear-gradient(to right,
-            rgba(246, 250, 243, 0.96) 0%,
-            rgba(246, 250, 243, 0.88) 30%,
-            rgba(246, 250, 243, 0.55) 46%,
-            rgba(246, 250, 243, 0.18) 58%,
-            rgba(246, 250, 243, 0.45) 72%,
-            rgba(246, 250, 243, 0.85) 100%),
-        linear-gradient(to top, rgba(238, 244, 234, 0.92) 0%, rgba(238, 244, 234, 0) 26%);
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(255, 255, 255, 0.62) 32%,
+        rgba(255, 255, 255, 0.22) 52%,
+        rgba(255, 255, 255, 0) 70%);
 }
 
-/* বাম স্তর — b-image1: কৃষক ও ধান কাটা। Solid core বড় → farmer zone-এ
-   নিচের স্তর চোখে পড়ে না; fade শুধু কেন্দ্র-seam-এ। */
-.hero-bg__left {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 56%;
-    background-image: url('/images/b-image1.jpg');
-    background-size: cover;
-    background-position: left center;
-    -webkit-mask-image: radial-gradient(125% 145% at 10% 50%, #000 55%, transparent 86%);
-    mask-image: radial-gradient(125% 145% at 10% 50%, #000 55%, transparent 86%);
+/* টেক্সট ব্লক — বামে */
+.hero-content {
+    max-width: 560px;
 }
 
-/* ডান স্তর — b-image2: গ্রামের বিল/ঝিল ও মাছ */
-.hero-bg__right {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    width: 42%;
-    background-image: url('/images/b-image2.jpg');
-    background-size: cover;
-    background-position: center 55%;
-    -webkit-mask-image: radial-gradient(120% 140% at 90% 50%, #000 52%, transparent 84%);
-    mask-image: radial-gradient(120% 140% at 90% 50%, #000 52%, transparent 84%);
+.hero-title {
+    font-weight: 800;
+    font-size: clamp(2.25rem, 1.35rem + 2vw, 3.5rem);
+    line-height: 1.18;
+    color: #1f2a22;
+    letter-spacing: -0.01em;
 }
 
-/* টেক্সট প্যানেল — hero-র একদম কেন্দ্রে; translucent white + blur */
-.hero-text-panel {
-    width: min(100%, 620px);
-    padding: 48px;
-    border-radius: 24px;
-    text-align: center;
-    background: rgba(255, 255, 255, 0.88);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 1.25rem 3rem rgba(23, 58, 28, 0.16), 0 0.25rem 0.75rem rgba(23, 58, 28, 0.06);
+.hero-title__green {
+    color: #2f7d32;
 }
 
-.hero-text-panel .lead {
-    color: #33463a;
+.hero-subtitle {
+    margin-top: 1rem;
+    font-size: clamp(1rem, 0.9rem + 0.4vw, 1.2rem);
+    line-height: 1.7;
+    color: #37463b;
 }
 
-/* হেডিং স্কেল — clamp দিয়ে responsive (desktop ~52px → mobile ~31px) */
-.hero-heading {
-    font-size: clamp(1.9rem, 1.05rem + 2.9vw, 3.25rem);
-    line-height: 1.25;
-}
-
-/* বাটন সারি — কেন্দ্রস্থিত */
+/* CTA জোড়া — rounded green primary + light secondary */
 .hero-actions {
+    margin-top: 2rem;
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
     align-items: center;
-    gap: 12px;
+    gap: 1rem;
 }
 
-/* ---------- Tablet ---------- */
+.hero-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.85rem 2rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    border: 2px solid transparent;
+    line-height: 1.2;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.hero-cta-btn--primary {
+    background: #2f7d32;
+    color: #ffffff;
+    box-shadow: 0 0.5rem 1.25rem rgba(47, 125, 50, 0.28);
+}
+
+.hero-cta-btn--primary:hover,
+.hero-cta-btn--primary:focus-visible {
+    background: #276b2b;
+    color: #ffffff;
+}
+
+.hero-cta-btn--secondary {
+    background: #ffffff;
+    color: #2f7d32;
+    border-color: rgba(47, 125, 50, 0.35);
+}
+
+.hero-cta-btn--secondary:hover,
+.hero-cta-btn--secondary:focus-visible {
+    background: #f6fbf4;
+    border-color: #2f7d32;
+    color: #276b2b;
+}
+
+/* ডান কলাম — কৃষকের figure (b-image1): বাম প্রান্ত soft fade → field-এ মিশে যায় */
+.hero-figure {
+    height: clamp(380px, 36vw, 560px);
+}
+
+.hero-figure img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 22% 20%;
+    background-color: #dce9d2;
+    -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 14%, #000 32%);
+    mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 14%, #000 32%);
+}
+
+/* ---------- Tablet (768–991) — proportional shrink, stacked ---------- */
 @media (max-width: 991.98px) {
     .hero-scene {
-        min-height: 500px;
-        padding: 2rem 1rem;
+        min-height: 560px;
+        padding: 2.5rem 0;
     }
 
-    .hero-bg__left {
-        width: 62%;
-        background-position: 22% center;
-        -webkit-mask-image: radial-gradient(130% 140% at 8% 50%, #000 50%, transparent 84%);
-        mask-image: radial-gradient(130% 140% at 8% 50%, #000 50%, transparent 84%);
+    .hero-title {
+        font-size: clamp(2rem, 1.3rem + 1.6vw, 2.75rem);
     }
 
-    .hero-bg__right {
-        width: 48%;
-        opacity: 0.9;
-        background-position: center 60%;
+    .hero-figure {
+        height: clamp(320px, 44vw, 440px);
     }
 
-    .hero-text-panel {
-        padding: 40px 36px;
+    .hero-figure img {
+        object-position: 22% 18%;
+        -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #000 26%);
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, #000 26%);
+    }
+
+    .hero-banner__bg::after {
+        background: linear-gradient(180deg,
+            rgba(255, 255, 255, 0.55) 0%,
+            rgba(255, 255, 255, 0.7) 38%,
+            rgba(255, 255, 255, 0.96) 66%,
+            rgba(255, 255, 255, 0.98) 100%);
+    }
+}
+
+/* ---------- Mobile (<768) — clean stacking: টেক্সট → তারপর farmer figure ---------- */
+@media (max-width: 767.98px) {
+    .hero-scene {
+        min-height: auto;
+        padding: 2rem 0 0;
+    }
+
+    .hero-content {
+        padding-bottom: 2rem;
+    }
+
+    .hero-figure {
+        height: 300px;
+    }
+}
+
+/* ==========================================================================
+   FEATURE / BENEFIT STRIP — Hero-র ঠিক নিচে
+   সাদা ব্যাকগ্রাউন্ডে একটি rounded container; ডেস্কটপে ৫টি সমান item এক সারিতে।
+   প্রতিটি item: green line-icon + bold Bengali title + muted description।
+   Item-গুলোর মাঝে subtle vertical divider; minimal & premium — কোনো gradient নয়।
+   ========================================================================== */
+
+.benefit-strip {
+    background: #ffffff;
+    padding: 2.5rem 0;
+}
+
+.benefit-strip__inner {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    border: 1px solid #e5ede2;
+    border-radius: 20px;
+    box-shadow: 0 0.4rem 1.5rem rgba(23, 58, 28, 0.05);
+    overflow: hidden;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 1.5rem 1.25rem;
+    border-left: 1px solid #eef3ea;
+    text-align: left;
+}
+
+.benefit-item:first-child {
+    border-left: 0;
+}
+
+.benefit-item__icon {
+    flex: 0 0 auto;
+    width: 3rem;
+    height: 3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.9rem;
+    line-height: 1;
+    color: #2f7d32;
+    background: #f0f7ee;
+    border-radius: 50%;
+}
+
+.benefit-item__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.benefit-item__title {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: #1f2a22;
+    line-height: 1.35;
+}
+
+.benefit-item__desc {
+    font-size: 0.84rem;
+    color: #66746a;
+    line-height: 1.45;
+    margin-top: 0.15rem;
+}
+
+/* ---------- Tablet — 3 কলাম (৩ + ২), divider/row reset ---------- */
+@media (max-width: 1199.98px) {
+    .benefit-strip__inner {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .benefit-item:nth-child(3n + 1) {
+        border-left: 0;
+    }
+
+    .benefit-item:nth-child(n + 4) {
+        border-top: 1px solid #eef3ea;
+    }
+}
+
+/* ---------- Mobile (<768) — এক কলাম stacked ---------- */
+@media (max-width: 767.98px) {
+    .benefit-strip {
+        padding: 1.5rem 0;
+    }
+
+    .benefit-strip__inner {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .benefit-item {
+        border-left: 0;
+        border-top: 1px solid #eef3ea;
+        padding: 1.1rem 1rem;
+    }
+
+    .benefit-item:first-child {
+        border-top: 0;
+    }
+
+    .benefit-item__title {
+        font-size: 1rem;
+    }
+
+    .benefit-item__desc {
+        font-size: 0.88rem;
     }
 }
 
@@ -513,51 +952,6 @@ main {
     .rice-showcase__filters {
         flex-wrap: wrap;
         overflow-x: visible;
-    }
-}
-
-/* ---------- Mobile — desktop shrink নয়, নিজস্ব composition ---------- */
-@media (max-width: 575.98px) {
-    .hero-scene {
-        min-height: 600px;
-        padding: 5rem 1rem 2.5rem;
-    }
-
-    /* কৃষক/ধানক্ষেত প্রাধান্য — subject উপরের দিকে রেখে face crop এড়ানো */
-    .hero-bg__left {
-        width: 100%;
-        background-position: 26% top;
-        -webkit-mask-image: radial-gradient(150% 115% at 28% 32%, #000 55%, transparent 92%);
-        mask-image: radial-gradient(150% 115% at 28% 32%, #000 55%, transparent 92%);
-    }
-
-    /* বিল/মাছ — নিচের ডান কোণে মৃদু উপস্থিতি */
-    .hero-bg__right {
-        top: auto;
-        height: 46%;
-        width: 74%;
-        bottom: -8%;
-        right: -12%;
-        opacity: 0.3;
-        -webkit-mask-image: radial-gradient(105% 105% at 82% 82%, #000 28%, transparent 76%);
-        mask-image: radial-gradient(105% 105% at 82% 82%, #000 28%, transparent 76%);
-    }
-
-    .hero-bg__base::after {
-        background:
-            linear-gradient(to top,
-                rgba(246, 250, 243, 0.97) 0%,
-                rgba(246, 250, 243, 0.88) 32%,
-                rgba(246, 250, 243, 0.35) 58%,
-                rgba(246, 250, 243, 0) 82%);
-    }
-
-    /* মোবাইলেও content vertically + horizontally centered */
-    .hero-text-panel {
-        width: min(100%, 480px);
-        padding: 32px 22px;
-        border-radius: 20px;
-        background: rgba(255, 255, 255, 0.9);
     }
 }
 

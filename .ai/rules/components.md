@@ -6,6 +6,7 @@ paths:
   - 'resources/views/components/order-*'
   - 'resources/views/components/delivery-info-*'
   - resources/views/components/site-footer.blade.php
+  - resources/views/components/navbar.blade.php
 ---
 
 # Components
@@ -27,3 +28,6 @@ The Delivery Information section ("আপনার ঠিকানায় প�
 
 ## Global footer: composer-driven shared data, no placeholders
 Global footer (site-footer) is a SINGLE reusable component rendered once from the main layout (components/layouts/app.blade.php) — every page inherits it; never render it per-page. All data arrives via a View::composer('components.site-footer') in AppServiceProvider (existing shared-data architecture): footerQuickLinks (fixed: home/products.index/categories.index — NO "আমাদের সম্পর্কে"/"যোগাযোগ"/legal links because those pages don't exist; never invent links), footerCategories (Cache 'footer.categories' 30min, take(limit+1) to detect overflow → shows "সব ক্যাটাগরি দেখুন"), footerContactActions (reuses HomepageService::contactActions() so footer & homepage CTA stay in sync), footerAddress, footerSocialItems. Contact/social come from config('shop.contact')/config('shop.social') (see contact rule) — hide items when unset, never show placeholders (the old footer hardcoded contact@example.com — that must never come back). Copyright year uses @bn(now()->year) per Bengali-numeral convention. Replaced the old components/footer.blade.php (deleted).
+
+## Global navbar is the 3-band site header
+The navbar is the global header: dark-green info topbar (hidden < lg) on top, white main header (logo + rounded search w/ category select + green search button, then wishlist/cart-with-total/account dropdown), then a nav row with the green 'সব ক্যাটাগরি' dropdown button and horizontally-scrollable Bengali nav links. It is shared via View::composer('components.navbar') in AppServiceProvider, which injects cartCount, cartTotal, wishlistCount, topCategories and navCategories (active root-level categories).

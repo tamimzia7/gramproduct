@@ -4,7 +4,8 @@ Before planning or editing, find the row whose globs match the file's path and r
 
 | Applies to | Rule file |
 | --- | --- |
-| resources/views/components/trust-feature-card.blade.php, resources/views/components/our-story.blade.php, resources/views/components/testimonials-*, resources/views/components/order-*, resources/views/components/delivery-info-*, resources/views/components/site-footer.blade.php | .ai/rules/components.md |
+| resources/views/components/trust-feature-card.blade.php, resources/views/components/our-story.blade.php, resources/views/components/testimonials-*, resources/views/components/order-*, resources/views/components/delivery-info-*, resources/views/components/site-footer.blade.php, resources/views/components/navbar.blade.php | .ai/rules/components.md |
+| resources/css/app.css | .ai/rules/css.md |
 | tests/Feature/** | .ai/rules/feature.md |
 | database/seeders/AdminUserSeeder.php | .ai/rules/seeders.md |
 | app/Services/HomepageService.php | .ai/rules/services.md |

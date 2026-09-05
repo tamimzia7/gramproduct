@@ -127,6 +127,7 @@ class CartController extends Controller
             'success' => true,
             'message' => __('cart.messages.removed'),
             'cart_count' => $this->cartService->getItemCount($request->user(), $request->session()->getId()),
+            'subtotal' => (float) ($cart->refresh()->subtotal ?? 0),
         ]);
     }
 
@@ -141,7 +142,12 @@ class CartController extends Controller
             return redirect()->route('cart.index')->with('success', __('cart.messages.cleared'));
         }
 
-        return response()->json(['success' => true, 'message' => __('cart.messages.cleared'), 'cart_count' => 0]);
+        return response()->json([
+            'success' => true,
+            'message' => __('cart.messages.cleared'),
+            'cart_count' => 0,
+            'subtotal' => 0.0,
+        ]);
     }
 
     // ---------- helpers ----------

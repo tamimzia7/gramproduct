@@ -3,36 +3,73 @@
     :meta-description="__('home.meta.description')">
 
     @push('head')
-        {{-- Hero-র প্রধান ছবি above-the-fold — lazy load নয়, eager preload --}}
+        {{-- Hero-র মূল ছবি above-the-fold — lazy load নয়, eager preload --}}
+        <link rel="preload" as="image" href="{{ asset('images/b-image3.jpg') }}" fetchpriority="high">
         <link rel="preload" as="image" href="{{ asset('images/b-image1.jpg') }}" fetchpriority="high">
     @endpush
 
     {{-- ============================== Hero ==============================
-         তিনটি বিদ্যমান গ্রামীণ ছবির blended background composition:
-         b-image1 (কৃষক/ধানক্ষেত — বামে) · b-image2 (বিল/মাছ — ডানে)
-         b-image3 (ধানক্ষেত landscape — ভিত্তি/গভীরতা) --}}
+         পূর্ণ-প্রস্থ ধানক্ষেতের real ফটোগ্রাফি (b-image3) — ব্যাকগ্রাউন্ডে;
+         ডান পাশে কৃষকের real ছবি (b-image1, field-এ masked/blended);
+         বামে বড় বাংলা হেডিং + rounded CTA জোড়া (reference অনুযায়ী)। --}}
     <section class="hero-scene">
-        <div class="hero-bg" aria-hidden="true">
-            <div class="hero-bg__base"></div>
-            <div class="hero-bg__left"></div>
-            <div class="hero-bg__right"></div>
-        </div>
+        <div class="hero-banner__bg" aria-hidden="true"></div>
 
-        {{-- প্যানেল — hero-র গাণিতিক কেন্দ্রে (flex center) --}}
-        <div class="hero-text-panel text-center">
-            <h1 class="hero-heading fw-bold text-success-emphasis mb-3">
-                {{ __('home.hero.title') }}
-            </h1>
-            <p class="lead mb-4">
-                {{ __('home.hero.subtitle') }}
-            </p>
-            <div class="hero-actions">
-                <a href="{{ route('products.index') }}" class="btn btn-success btn-lg px-4">
-                    <i class="bi bi-basket2 me-2"></i>{{ __('home.hero.cta_primary') }}
-                </a>
-                <a href="{{ route('categories.index') }}" class="btn btn-outline-success btn-lg px-4 bg-white bg-opacity-75">
-                    {{ __('home.hero.cta_secondary') }}
-                </a>
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-12 col-lg-6">
+                    <div class="hero-content">
+                        <h1 class="hero-title">
+                            <span class="d-block">{{ __('home.hero.title') }}</span>
+                            <span class="d-block hero-title__green">{{ __('home.hero.title_highlight') }}</span>
+                        </h1>
+                        <p class="hero-subtitle">
+                            {{ __('home.hero.subtitle') }}<br>
+                            {{ __('home.hero.subtitle_2') }}
+                        </p>
+                        <div class="hero-actions">
+                            <a href="{{ route('products.index') }}" class="btn hero-cta-btn hero-cta-btn--primary">
+                                <i class="bi bi-bag-check me-2" aria-hidden="true"></i>{{ __('home.hero.cta_primary') }}
+                            </a>
+                            <a href="{{ route('categories.index') }}" class="btn hero-cta-btn hero-cta-btn--secondary">
+                                <i class="bi bi-play-circle me-2" aria-hidden="true"></i>{{ __('home.hero.cta_secondary') }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <div class="hero-figure">
+                        <img src="{{ asset('images/b-image1.jpg') }}"
+                             alt="{{ __('home.hero.fig_alt') }}"
+                             loading="eager"
+                             fetchpriority="high">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- ==================== Feature/Benefit Strip ====================
+         Hero-র ঠিক নিচে ৫টি benefit item — সাদা rounded container-এ।
+         Icon (green line icon) + Bengali title + short description;
+         reference-এর মতোই subtle divider-সহ এক সারি। --}}
+    <section class="benefit-strip" aria-label="{{ __('home.features.aria') }}">
+        <div class="container">
+            <div class="benefit-strip__inner">
+                @php
+                    $featureIcons = ['bi-leaf', 'bi-tree', 'bi-truck', 'bi-box-seam', 'bi-person-raised-hand'];
+                @endphp
+
+                @foreach (__('home.features.items') as $index => $feature)
+                    <div class="benefit-item">
+                        <i class="bi {{ $featureIcons[$index] }} benefit-item__icon" aria-hidden="true"></i>
+                        <div class="benefit-item__text">
+                            <span class="benefit-item__title">{{ $feature['title'] }}</span>
+                            <span class="benefit-item__desc">{{ $feature['description'] }}</span>
+                        </div>
+                    </div>
+                @endforeach
             </div>
         </div>
     </section>
